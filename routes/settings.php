@@ -3,7 +3,9 @@
 use App\Http\Controllers\Settings\AiCredentialController;
 use App\Http\Controllers\Settings\AiCredentialVerificationController;
 use App\Http\Controllers\Settings\CandidateProfileController;
+use App\Http\Controllers\Settings\CvImportController;
 use App\Http\Controllers\Settings\DefaultAiCredentialController;
+use App\Http\Controllers\Settings\MasterCvPreviewController;
 use App\Http\Controllers\Settings\MasterDocumentController;
 use App\Http\Controllers\Settings\MasterDocumentFileController;
 use App\Http\Controllers\Settings\ProfileController;
@@ -42,8 +44,19 @@ Route::middleware(['auth', 'verified', 'throttle:writes'])->group(function () {
         ->name('master-document-files.store');
     Route::delete('settings/documents/{type}/file', [MasterDocumentFileController::class, 'destroy'])->name('master-document-files.destroy');
 
+    Route::post('settings/documents/cv/preview', [MasterCvPreviewController::class, 'store'])->name('master-cv-previews.store');
+    Route::post('settings/documents/cv/import', [CvImportController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('cv-imports.store');
+    Route::delete('settings/documents/cv/import/{cvImport}', [CvImportController::class, 'destroy'])
+        ->middleware('can:delete,cvImport')
+        ->name('cv-imports.destroy');
+
     Route::get('settings/ai', [AiCredentialController::class, 'index'])->name('ai-credentials.index');
     Route::post('settings/ai', [AiCredentialController::class, 'store'])->name('ai-credentials.store');
+    Route::patch('settings/ai/{aiCredential}', [AiCredentialController::class, 'update'])
+        ->middleware('can:update,aiCredential')
+        ->name('ai-credentials.update');
     Route::delete('settings/ai/{aiCredential}', [AiCredentialController::class, 'destroy'])
         ->middleware('can:delete,aiCredential')
         ->name('ai-credentials.destroy');

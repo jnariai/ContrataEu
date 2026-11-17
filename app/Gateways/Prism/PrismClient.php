@@ -14,6 +14,8 @@ use Prism\Prism\Exceptions\PrismException;
 use Prism\Prism\Exceptions\PrismProviderOverloadedException;
 use Prism\Prism\Exceptions\PrismRateLimitedException;
 use Prism\Prism\Facades\Prism;
+use Prism\Prism\ValueObjects\Media\Document;
+use Prism\Prism\ValueObjects\Messages\UserMessage;
 use Throwable;
 
 /**
@@ -22,6 +24,8 @@ use Throwable;
  */
 class PrismClient
 {
+    public function __construct(private ProviderErrorDetails $errorDetails) {}
+
     private const int CONNECT_TIMEOUT_SECONDS = 5;
 
     private const int PING_TIMEOUT_SECONDS = 20;
@@ -30,6 +34,10 @@ class PrismClient
     private const int GENERATION_TIMEOUT_SECONDS = 120;
 
     private const int GENERATION_MAX_TOKENS = 16_000;
+
+    private const int CV_IMPORT_MAX_TOKENS = 8_000;
+
+    private const int DEEPSEEK_MAX_TOKENS = 8_192;
 
     /**
      * Makes the smallest possible call, to prove the key and model work.
@@ -58,7 +66,8 @@ class PrismClient
         $response = $this->call($provider, $model, fn () => Prism::structured()
             ->using(self::prismProvider($provider), $model, ['api_key' => $apiKey])
             ->withClientOptions(['timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
-            ->withMaxTokens(self::GENERATION_MAX_TOKENS)
+            ->withMaxTokens(self::generationMaxTokens($provider))
+            ->withProviderOptions(self::generationProviderOptions($provider))
             ->withSystemPrompt($prompt->system)
             ->withPrompt($prompt->user)
             ->withSchema(GenerationSchema::for($prompt))
@@ -77,6 +86,25 @@ class PrismClient
     }
 
     /**
+     * Sends a CV PDF as a document and returns the model's plain-text answer (the master CV in Markdown).
+     *
+     * @throws AiProviderRejectedRequest when the key or model is wrong, or the model can't read PDFs
+     * @throws AiProviderException when the provider is unavailable
+     */
+    public function readCv(AiProvider $provider, string $model, string $apiKey, string $pdf, string $instructions): string
+    {
+        $response = $this->call($provider, $model, fn () => Prism::text()
+            ->using(self::prismProvider($provider), $model, ['api_key' => $apiKey])
+            ->withClientOptions(['timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
+            ->withMaxTokens(self::CV_IMPORT_MAX_TOKENS)
+            ->withSystemPrompt($instructions)
+            ->withMessages([new UserMessage('Convert the attached CV.', [Document::fromRawContent($pdf, 'application/pdf', 'cv.pdf')])])
+            ->asText());
+
+        return $response->text;
+    }
+
+    /**
      * @template T
      *
      * @param  callable(): T  $request
@@ -84,10 +112,12 @@ class PrismClient
      */
     private function call(AiProvider $provider, string $model, callable $request): mixed
     {
+        $this->errorDetails->reset();
+
         try {
             return $request();
         } catch (PrismRateLimitedException $exception) {
-            throw AiProviderException::rateLimited($exception->retryAfter, $exception);
+            throw AiProviderRejectedRequest::rateLimited($provider, $model, $exception->retryAfter, $exception, $this->errorDetails->message());
         } catch (PrismProviderOverloadedException $exception) {
             throw AiProviderException::badResponse(529, $exception);
         } catch (ConnectionException $exception) {
@@ -98,21 +128,41 @@ class PrismClient
             }
 
             throw match (true) {
-                in_array(self::upstreamStatus($exception), [401, 403], true) => AiProviderRejectedRequest::invalidKey($provider, $exception),
-                self::upstreamStatus($exception) === 402 => AiProviderRejectedRequest::outOfCredit($provider, $exception),
-                in_array(self::upstreamStatus($exception), [400, 404, 422], true) => AiProviderRejectedRequest::invalidRequest($provider, $model, $exception),
+                in_array(self::upstreamStatus($exception), [401, 403], true) => AiProviderRejectedRequest::invalidKey($provider, $exception, $this->errorDetails->message()),
+                self::upstreamStatus($exception) === 402 => AiProviderRejectedRequest::outOfCredit($provider, $exception, $this->errorDetails->message()),
+                self::upstreamStatus($exception) === 429 => AiProviderRejectedRequest::rateLimited($provider, $model, previous: $exception, details: $this->errorDetails->message()),
+                in_array(self::upstreamStatus($exception), [400, 404, 422], true) => AiProviderRejectedRequest::invalidRequest($provider, $model, $exception, $this->errorDetails->message()),
                 default => AiProviderException::badResponse(self::upstreamStatus($exception), $exception),
             };
         }
+    }
+
+    /** DeepSeek's chat model rejects more than 8K output tokens; a typical package needs 3–6K. */
+    private static function generationMaxTokens(AiProvider $provider): int
+    {
+        return $provider === AiProvider::DeepSeek ? self::DEEPSEEK_MAX_TOKENS : self::GENERATION_MAX_TOKENS;
+    }
+
+    /**
+     * Prism's DeepSeek structured call sends `max_completion_tokens`, while DeepSeek documents `max_tokens`: send
+     * both, so the limit holds whichever one the API reads.
+     *
+     * @return array<string, mixed>
+     */
+    private static function generationProviderOptions(AiProvider $provider): array
+    {
+        return $provider === AiProvider::DeepSeek ? ['max_tokens' => self::DEEPSEEK_MAX_TOKENS] : [];
     }
 
     private static function prismProvider(AiProvider $provider): Provider
     {
         return match ($provider) {
             AiProvider::Anthropic => Provider::Anthropic,
+            AiProvider::OpenAI => Provider::OpenAI,
             AiProvider::Gemini => Provider::Gemini,
             AiProvider::OpenRouter => Provider::OpenRouter,
             AiProvider::Groq => Provider::Groq,
+            AiProvider::DeepSeek => Provider::DeepSeek,
         };
     }
 

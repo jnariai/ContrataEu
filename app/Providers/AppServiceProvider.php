@@ -7,6 +7,8 @@ use App\Gateways\Cloudflare\CloudflarePdfRenderer;
 use App\Gateways\Dompdf\DompdfPdfRenderer;
 use App\Gateways\GatewayException;
 use App\Gateways\PdfRenderer;
+use App\Gateways\Prism\ProviderErrorDetails;
+use App\Models\CvImport;
 use App\Models\GeneratedDocument;
 use App\Models\MasterDocument;
 use App\Models\User;
@@ -17,10 +19,12 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Http\Client\Events\ResponseReceived;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -35,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->scoped(ProviderErrorDetails::class);
+
         $this->app->bind(PdfRenderer::class, function (Application $app): PdfRenderer {
             $config = $app->make(Repository::class);
 
@@ -57,8 +63,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureProviderErrorDetails();
         $this->configureRateLimiting();
         $this->configureErrorPages();
+    }
+
+    /** Every failed outbound HTTP reply is kept for the scope, so PrismClient can show the provider's own reason. */
+    protected function configureProviderErrorDetails(): void
+    {
+        Event::listen(ResponseReceived::class, function (ResponseReceived $event): void {
+            if ($event->response->failed()) {
+                $this->app->make(ProviderErrorDetails::class)->record($event->response);
+            }
+        });
     }
 
     /** Writes (any method but GET/HEAD) per user, or per IP for guests; page loads and polling are not counted. */
@@ -118,6 +135,7 @@ class AppServiceProvider extends ServiceProvider
             'user' => User::class,
             'master_document' => MasterDocument::class,
             'generated_document' => GeneratedDocument::class,
+            'cv_import' => CvImport::class,
         ]);
 
         DB::prohibitDestructiveCommands(

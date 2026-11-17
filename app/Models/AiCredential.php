@@ -62,6 +62,18 @@ class AiCredential extends Model
         return MaskedApiKey::fromHint($this->key_hint);
     }
 
+    /** A different model may not work with this key, so the old "Verified" no longer applies. */
+    public function changeModel(string $model): void
+    {
+        $model = trim($model);
+
+        if ($model === $this->model) {
+            return;
+        }
+
+        $this->update(['model' => $model, 'last_verified_at' => null]);
+    }
+
     public function markVerified(CarbonImmutable $at): void
     {
         $this->update(['last_verified_at' => $at]);

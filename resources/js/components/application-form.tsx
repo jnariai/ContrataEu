@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useTrans } from '@/hooks/use-trans';
 import type {
@@ -20,8 +27,8 @@ type QuestionRow = { key: string; id: string | null; question: string };
 let nextKey = 0;
 const newKey = (): string => `q${nextKey++}`;
 
-const selectClassName =
-    'h-9 w-full rounded-md border border-input bg-transparent px-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm dark:bg-input/30';
+/** Radix Select can't hold an empty value, so "Not specified" is this sentinel and submits as empty. */
+const NO_WORK_MODE = 'none';
 
 export default function ApplicationForm({
     form,
@@ -38,6 +45,12 @@ export default function ApplicationForm({
 }) {
     const { t, locale } = useTrans();
     const { languages } = usePage().props;
+    const [workMode, setWorkMode] = useState(
+        application?.work_mode?.value ?? NO_WORK_MODE,
+    );
+    const [language, setLanguage] = useState<string>(
+        application?.language.value ?? defaultLanguage,
+    );
     const [jdLength, setJdLength] = useState(
         application?.job_description.length ?? 0,
     );
@@ -114,46 +127,76 @@ export default function ApplicationForm({
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="work_mode">{t('Work mode')}</Label>
-                            <select
-                                id="work_mode"
+                            <input
+                                type="hidden"
                                 name="work_mode"
-                                defaultValue={
-                                    application?.work_mode?.value ?? ''
+                                value={
+                                    workMode === NO_WORK_MODE ? '' : workMode
                                 }
-                                className={selectClassName}
+                            />
+                            <Select
+                                value={workMode}
+                                onValueChange={setWorkMode}
                             >
-                                <option value="">{t('Not specified')}</option>
-                                {options.workModes.map((mode) => (
-                                    <option key={mode.value} value={mode.value}>
-                                        {mode.label}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger
+                                    id="work_mode"
+                                    className="w-full"
+                                    aria-invalid={
+                                        errors.work_mode ? true : undefined
+                                    }
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={NO_WORK_MODE}>
+                                        {t('Not specified')}
+                                    </SelectItem>
+                                    {options.workModes.map((mode) => (
+                                        <SelectItem
+                                            key={mode.value}
+                                            value={mode.value}
+                                        >
+                                            {mode.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <InputError message={errors.work_mode} />
                         </div>
                         <div className="grid gap-2 sm:col-span-2">
                             <Label htmlFor="language">
                                 {t('Output language')}
                             </Label>
-                            <select
-                                id="language"
+                            <input
+                                type="hidden"
                                 name="language"
-                                defaultValue={
-                                    application?.language.value ??
-                                    defaultLanguage
-                                }
-                                className={selectClassName}
+                                value={language}
+                            />
+                            <Select
+                                value={language}
+                                onValueChange={setLanguage}
                             >
-                                {languages.map((language) => (
-                                    <option
-                                        key={language.value}
-                                        value={language.value}
-                                        lang={language.value}
-                                    >
-                                        {language.label}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger
+                                    id="language"
+                                    className="w-full"
+                                    aria-invalid={
+                                        errors.language ? true : undefined
+                                    }
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {languages.map((option) => (
+                                        <SelectItem
+                                            key={option.value}
+                                            value={option.value}
+                                            lang={option.value}
+                                        >
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <p className="text-xs text-muted-foreground">
                                 {t(
                                     'The language the CV, letters and answers are written in. Your master CV can be in either language.',

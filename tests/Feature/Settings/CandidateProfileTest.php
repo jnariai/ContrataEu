@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CvConvention;
 use App\Enums\Language;
 use App\Models\CandidateProfile;
 use App\Models\User;
@@ -12,7 +13,7 @@ function validCandidateProfile(array $overrides = []): array
         'headline' => 'Senior Backend Engineer',
         'location' => 'Lisbon, Portugal',
         'work_authorization' => 'EU citizen',
-        'region_convention' => 'EU',
+        'cv_convention' => 'us',
         'links' => ['linkedin' => 'https://linkedin.com/in/ana', 'github' => 'https://github.com/ana', 'portfolio' => ''],
         'default_output_language' => 'pt-BR',
         ...$overrides,
@@ -27,7 +28,13 @@ it('shows an empty profile prefilled with the account name and UI language', fun
             ->component('settings/candidate')
             ->where('exists', false)
             ->where('profile.full_name', 'Ana Souza')
-            ->where('profile.default_output_language', 'pt-BR'));
+            ->where('profile.default_output_language', 'pt-BR')
+            ->where('profile.cv_convention', 'international')
+            ->where('cvConventions.0.value', 'international')
+            ->where('cvConventions.1.value', 'us')
+            ->where('cvConventions.2.value', 'uk')
+            ->has('cvConventions', 3)
+            ->where('brazilConvention.label', 'Brasil'));
 });
 
 it('saves the candidate profile, keeping a single profile per user', function (): void {
@@ -42,7 +49,16 @@ it('saves the candidate profile, keeping a single profile per user', function ()
     expect($profile->user_id)->toBe($user->id)
         ->and($profile->headline)->toBe('Staff Engineer')
         ->and($profile->links)->toEqual(['linkedin' => 'https://linkedin.com/in/ana', 'github' => 'https://github.com/ana', 'portfolio' => null])
-        ->and($profile->default_output_language)->toBe(Language::PtBr);
+        ->and($profile->default_output_language)->toBe(Language::PtBr)
+        ->and($profile->cv_convention)->toBe(CvConvention::UnitedStates);
+});
+
+it('saves no convention choice as International / EU', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->put(route('candidate-profile.update'), validCandidateProfile(['cv_convention' => '']));
+
+    expect($user->candidateProfile()->sole()->cv_convention)->toBeNull();
 });
 
 it('validates the profile', function (array $input, string $field): void {
@@ -54,6 +70,8 @@ it('validates the profile', function (array $input, string $field): void {
     'links are URLs' => [['links' => ['linkedin' => 'not a url']], 'links.linkedin'],
     'only http links' => [['links' => ['github' => 'javascript:alert(1)']], 'links.github'],
     'supported output language' => [['default_output_language' => 'fr'], 'default_output_language'],
+    'known convention' => [['cv_convention' => 'eu'], 'cv_convention'],
+    'Brazil is not an English-document convention' => [['cv_convention' => 'brazil'], 'cv_convention'],
 ]);
 
 it('requires a verified email', function (): void {

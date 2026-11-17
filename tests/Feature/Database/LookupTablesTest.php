@@ -2,6 +2,7 @@
 
 use App\Enums\AiProvider;
 use App\Enums\ApplicationStatus;
+use App\Enums\CvConvention;
 use App\Enums\DocumentType;
 use App\Enums\FilePurpose;
 use App\Enums\GenerationStatus;
@@ -22,6 +23,7 @@ it('has exactly one lookup row per enum case', function (string $enum, string $t
     'ai providers' => [AiProvider::class, 'ai_providers'],
     'work modes' => [WorkMode::class, 'work_modes'],
     'file purposes' => [FilePurpose::class, 'file_purposes'],
+    'cv conventions' => [CvConvention::class, 'cv_conventions'],
 ]);
 
 it('keeps the generation status ids the partial unique index relies on', function (): void {

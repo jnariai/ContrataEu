@@ -2,6 +2,7 @@
 
 namespace App\Datas;
 
+use App\Enums\CvConvention;
 use App\Enums\Language;
 
 /**
@@ -26,6 +27,7 @@ final readonly class PromptContext
         public bool $wantsCoverLetter,
         public bool $wantsRecruiterMessage,
         public Language $documentLanguage,
+        public CvConvention $cvConvention,
         public Language $reportLanguage,
         public string $system,
         public string $playbook,

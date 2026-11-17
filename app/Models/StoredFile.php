@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Storage;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  * @property-read User $user
- * @property-read MasterDocument|GeneratedDocument $fileable
+ * @property-read MasterDocument|GeneratedDocument|CvImport $fileable
  */
 #[Fillable(['purpose', 'disk', 'path', 'original_name', 'mime_type', 'size_bytes'])]
 class StoredFile extends Model
@@ -49,7 +49,7 @@ class StoredFile extends Model
     /** Records an object that was just written to the bucket. */
     public static function record(
         User $owner,
-        MasterDocument|GeneratedDocument $fileable,
+        MasterDocument|GeneratedDocument|CvImport $fileable,
         FilePurpose $purpose,
         string $disk,
         StoragePath $path,
@@ -70,6 +70,13 @@ class StoredFile extends Model
         $file->save();
 
         return $file;
+    }
+
+    /** Hands the file to another owner record (an imported CV PDF becoming the master CV's original). */
+    public function moveTo(MasterDocument $document): void
+    {
+        $this->fileable()->associate($document);
+        $this->save();
     }
 
     /** The object at the same path was overwritten: keep the row, refresh what describes it. */

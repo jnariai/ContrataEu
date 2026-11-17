@@ -19,7 +19,7 @@ class CandidateProfileFactory extends Factory
             'headline' => 'Senior Backend Engineer',
             'location' => fake()->city().', '.fake()->country(),
             'work_authorization' => 'EU citizen',
-            'region_convention' => 'EU',
+            'cv_convention' => null,
             'links' => [
                 'linkedin' => 'https://www.linkedin.com/in/'.fake()->userName(),
                 'github' => 'https://github.com/'.fake()->userName(),

@@ -4,42 +4,9 @@ use App\Actions\RenderDocumentPdf;
 use App\Enums\DocumentType;
 use App\Enums\FilePurpose;
 use App\Enums\Language;
-use App\Models\Application;
-use App\Models\CandidateProfile;
-use App\Models\GeneratedDocument;
-use App\Models\Generation;
 use App\Models\StoredFile;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
-
-const EXAMPLE_CV = <<<'MD'
-# Jane Doe
-Lisbon, Portugal · jane@example.com · [linkedin.com/in/janedoe](https://linkedin.com/in/janedoe)
-
-## Summary
-Senior backend engineer, 8 years in payments, Laravel and PostgreSQL.
-
-## Skills
-- **Languages:** PHP, TypeScript
-- **Backend:** Laravel, PostgreSQL, Redis
-
-## Experience
-### Senior Backend Engineer — Foo Payments
-*Mar 2022 – Present · Remote*
-- Cut checkout latency by **40%** by moving fraud checks to a queue.
-
-### Backend Engineer — Bar Bank
-*Jan 2018 – Feb 2022 · Lisbon*
-- Built the card-issuing API used by 2M customers.
-
-## Projects
-### Ledgerly — [github.com/jane/ledgerly](https://github.com/jane/ledgerly)
-- Double-entry ledger library, 1k stars.
-
-## Education
-### BSc Computer Science — University of Lisbon
-*2014 – 2018*
-MD;
 
 const EXAMPLE_CV_PT_BR = <<<'MD'
 # João Conceição
@@ -60,19 +27,6 @@ Desenvolvedor backend com 8 anos de experiência em pagamentos.
 ### Bacharelado em Ciência da Computação — Universidade de São Paulo
 *2014 – 2018*
 MD;
-
-/** A succeeded generation's document for a candidate named Jane Doe applying as "Senior Backend Engineer". */
-function pdfDocument(DocumentType $type = DocumentType::Cv, Language $language = Language::En, ?string $content = null): GeneratedDocument
-{
-    $user = User::factory()->create(['email' => 'jane@example.com']);
-    CandidateProfile::factory()->for($user)->create(['full_name' => 'Jane Doe', 'location' => 'Lisbon', 'links' => ['linkedin' => 'https://linkedin.com/in/janedoe', 'github' => null, 'portfolio' => null]]);
-    $application = Application::factory()->for($user)->create(['company_name' => 'Acme', 'role_title' => 'Senior Backend Engineer']);
-    $generation = Generation::factory()->for($application)->version(2)->create(['language' => $language]);
-
-    $content ??= $type === DocumentType::Cv ? EXAMPLE_CV : "Hello Acme team,\n\nI would love to join.\nI bring 8 years of payments work.\n\nBest,\nJane";
-
-    return GeneratedDocument::factory()->for($generation)->create(['type' => $type, 'content' => $content, 'original_content' => $content]);
-}
 
 it('renders the PDF once, keeps it in the bucket and redirects to a signed download URL', function (): void {
     $renderer = fakePdfRenderer();

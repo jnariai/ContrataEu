@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use App\Enums\CvConvention;
 use App\Enums\Language;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,7 +18,7 @@ class UpdateCandidateProfileRequest extends FormRequest
             'headline' => ['nullable', 'string', 'max:160'],
             'location' => ['nullable', 'string', 'max:120'],
             'work_authorization' => ['nullable', 'string', 'max:160'],
-            'region_convention' => ['nullable', 'string', 'max:16'],
+            'cv_convention' => ['nullable', Rule::in(array_map(static fn (CvConvention $convention): string => $convention->value, CvConvention::forEnglish()))],
             'links' => ['nullable', 'array:linkedin,github,portfolio'],
             'links.linkedin' => ['nullable', 'url:http,https', 'max:255'],
             'links.github' => ['nullable', 'url:http,https', 'max:255'],

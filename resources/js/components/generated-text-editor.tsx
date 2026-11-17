@@ -3,6 +3,7 @@ import type { RouteDefinition } from '@/wayfinder';
 import { Copy, Download, RotateCcw, Save } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
+import DocumentPreview from '@/components/document-preview';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ export default function GeneratedTextEditor({
     revert,
     canEdit,
     pdfUrl,
+    preview,
 }: {
     id: string;
     label: ReactNode;
@@ -37,6 +39,8 @@ export default function GeneratedTextEditor({
     canEdit: boolean;
     /** Download link for documents that have a PDF; the PDF shows the saved text, so it waits for a save. */
     pdfUrl?: string;
+    /** Server-rendered PDF-template preview of the current text (CV and cover letter). */
+    preview?: { url: string; title: string };
 }) {
     const { t, locale } = useTrans();
     const form = useForm({ content });
@@ -118,6 +122,13 @@ export default function GeneratedTextEditor({
                     <Copy className="size-4" />
                     {t('Copy')}
                 </Button>
+                {preview && (
+                    <DocumentPreview
+                        url={preview.url}
+                        title={preview.title}
+                        getContent={() => form.data.content}
+                    />
+                )}
                 {pdfUrl &&
                     (form.isDirty ? (
                         <Button

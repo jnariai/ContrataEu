@@ -7,6 +7,7 @@ use App\Actions\StoreAiCredential;
 use App\Enums\AiProvider;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreAiCredentialRequest;
+use App\Http\Requests\Settings\UpdateAiCredentialRequest;
 use App\Models\AiCredential;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,15 @@ class AiCredentialController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('API key saved. Use “Test connection” to check it works.')]);
+
+        return to_route('ai-credentials.index');
+    }
+
+    public function update(UpdateAiCredentialRequest $request, AiCredential $aiCredential): RedirectResponse
+    {
+        $aiCredential->changeModel($request->string('model')->toString());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Model changed. Use “Test connection” to check it works.')]);
 
         return to_route('ai-credentials.index');
     }

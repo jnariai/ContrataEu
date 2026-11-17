@@ -4,6 +4,7 @@ use App\Actions\PruneGenerations;
 use App\Actions\RunGeneration;
 use App\Enums\AiProvider;
 use App\Enums\ApplicationStatus;
+use App\Enums\CvConvention;
 use App\Enums\DocumentType;
 use App\Enums\GenerationStatus;
 use App\Enums\Language;
@@ -94,6 +95,22 @@ it("sends the user's key, overrides and job to the model", function (): void {
     });
 });
 
+it('picks the CV convention from the document language and the profile', function (Language $language, ?CvConvention $choice, string $expected, string $notExpected): void {
+    $generation = queuedGeneration(['language' => $language]);
+    $generation->application->user->candidateProfile->forceFill(['cv_convention' => $choice])->save();
+    $fake = Prism::fake([fakeGenerationResponse(generationAnswer())]);
+
+    app(RunGeneration::class)->handle($generation->fresh());
+
+    $fake->assertRequest(fn (array $requests) => expect($requests[0]->prompt())
+        ->toContain($expected)
+        ->not->toContain($notExpected));
+})->with([
+    'pt-BR always follows Brazil' => [Language::PtBr, CvConvention::UnitedStates, '## CV conventions: Brazil', '## CV conventions: United States'],
+    'English follows the choice' => [Language::En, CvConvention::UnitedStates, '## CV conventions: United States', '## CV conventions: Brazil'],
+    'English defaults to International' => [Language::En, null, '## CV conventions: International / EU', '## CV conventions: United States'],
+]);
+
 it('keeps a later status the user chose', function (): void {
     $generation = queuedGeneration(['status' => ApplicationStatus::Applied]);
     Prism::fake([fakeGenerationResponse(generationAnswer())]);
@@ -122,7 +139,7 @@ it('fails with the provider message the user can act on, saving nothing', functi
 
     $generation->refresh();
     expect($generation->status)->toBe(GenerationStatus::Failed)
-        ->and($generation->error)->toBe('Anthropic rejected the API key. Check that it is correct and still active, then save it again.')
+        ->and($generation->error)->toBe('Anthropic rejected the API key. Check that it is correct and still active, then save it again. Details from Anthropic: “invalid x-api-key”')
         ->and($generation->error)->not->toContain('sk-ant')
         ->and(GeneratedDocument::query()->count())->toBe(0)
         ->and($generation->application->fresh()->current_generation_id)->toBeNull();
@@ -162,7 +179,7 @@ it('writes failure messages in the user language', function (): void {
 
     (new RunGenerationJob($generation))->handle(app(RunGeneration::class));
 
-    expect($generation->fresh()->error)->toBe('Anthropic recusou a chave de API. Verifique se ela está correta e ativa e salve-a novamente.');
+    expect($generation->fresh()->error)->toBe('Anthropic recusou a chave de API. Verifique se ela está correta e ativa e salve-a novamente. Detalhes da Anthropic: “x”');
 });
 
 it('marks the generation failed when the job dies mid-run', function (): void {

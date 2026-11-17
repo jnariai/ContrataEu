@@ -3,6 +3,7 @@ import { useState } from 'react';
 import GeneratedAnswerController from '@/actions/App/Http/Controllers/GeneratedAnswerController';
 import GeneratedAnswerRevertController from '@/actions/App/Http/Controllers/GeneratedAnswerRevertController';
 import GeneratedDocumentController from '@/actions/App/Http/Controllers/GeneratedDocumentController';
+import GeneratedDocumentPreviewController from '@/actions/App/Http/Controllers/GeneratedDocumentPreviewController';
 import GeneratedDocumentPdfController from '@/actions/App/Http/Controllers/GeneratedDocumentPdfController';
 import GeneratedDocumentRevertController from '@/actions/App/Http/Controllers/GeneratedDocumentRevertController';
 import GeneratedTextEditor from '@/components/generated-text-editor';
@@ -100,6 +101,16 @@ export default function ApplicationTabs({
                                 document.id,
                             )}
                             canEdit={canEdit}
+                            preview={
+                                document.has_pdf
+                                    ? {
+                                          url: GeneratedDocumentPreviewController.store.url(
+                                              document.id,
+                                          ),
+                                          title: document.label,
+                                      }
+                                    : undefined
+                            }
                             pdfUrl={
                                 document.has_pdf
                                     ? GeneratedDocumentPdfController.show.url(

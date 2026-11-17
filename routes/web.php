@@ -8,12 +8,17 @@ use App\Http\Controllers\GeneratedAnswerController;
 use App\Http\Controllers\GeneratedAnswerRevertController;
 use App\Http\Controllers\GeneratedDocumentController;
 use App\Http\Controllers\GeneratedDocumentPdfController;
+use App\Http\Controllers\GeneratedDocumentPreviewController;
 use App\Http\Controllers\GeneratedDocumentRevertController;
 use App\Http\Controllers\GenerationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\PdfFontController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+// The PDF template's fonts, for on-screen previews (public: the preview iframe has no session).
+Route::get('pdf-fonts/{font}', [PdfFontController::class, 'show'])->where('font', '[A-Za-z-]+\.ttf')->name('pdf-fonts.show');
 
 Route::patch('locale', [LocaleController::class, 'update'])->middleware('throttle:30,1')->name('locale.update');
 
@@ -30,6 +35,9 @@ Route::middleware(['auth', 'verified', 'throttle:writes'])->group(function () {
         ->name('generations.store');
 
     Route::patch('generated-documents/{document}', [GeneratedDocumentController::class, 'update'])->name('generated-documents.update');
+    Route::post('generated-documents/{document}/preview', [GeneratedDocumentPreviewController::class, 'store'])
+        ->middleware('can:view,document')
+        ->name('generated-documents.preview');
     Route::post('generated-documents/{document}/revert', [GeneratedDocumentRevertController::class, 'store'])
         ->middleware('can:update,document')
         ->name('generated-documents.revert');

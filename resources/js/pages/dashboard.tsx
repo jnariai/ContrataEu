@@ -180,14 +180,14 @@ function SetupChecklist({ setup }: { setup: Props['setup'] }) {
             href: candidateProfile(),
         },
         {
-            done: setup.masterCv,
-            label: t('Paste your master CV'),
-            href: masterDocuments(),
-        },
-        {
             done: setup.aiKey,
             label: t('Add your AI key'),
             href: aiCredentials(),
+        },
+        {
+            done: setup.masterCv,
+            label: t('Add your master CV (paste it or upload a PDF)'),
+            href: masterDocuments(),
         },
     ];
 

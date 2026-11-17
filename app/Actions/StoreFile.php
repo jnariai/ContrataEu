@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Casts\LookupCast;
 use App\Enums\FilePurpose;
+use App\Models\CvImport;
 use App\Models\GeneratedDocument;
 use App\Models\MasterDocument;
 use App\Models\StoredFile;
@@ -27,7 +28,7 @@ class StoreFile
 
     public function handle(
         User $owner,
-        MasterDocument|GeneratedDocument $fileable,
+        MasterDocument|GeneratedDocument|CvImport $fileable,
         FilePurpose $purpose,
         StoragePath $path,
         UploadedFile|string $contents,

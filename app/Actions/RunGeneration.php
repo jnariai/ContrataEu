@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Datas\PromptContext;
+use App\Enums\CvConvention;
 use App\Enums\DocumentType;
 use App\Enums\PromptKey;
 use App\Exceptions\BusinessRuleException;
@@ -99,7 +100,6 @@ class RunGeneration
                 'Headline' => $profile->headline,
                 'Location' => $profile->location,
                 'Work authorization' => $profile->work_authorization,
-                'CV conventions (region)' => $profile->region_convention,
                 'LinkedIn' => $profile->links['linkedin'] ?? null,
                 'GitHub' => $profile->links['github'] ?? null,
                 'Portfolio' => $profile->links['portfolio'] ?? null,
@@ -120,6 +120,7 @@ class RunGeneration
             wantsCoverLetter: $application->wants_cover_letter,
             wantsRecruiterMessage: $application->wants_recruiter_message,
             documentLanguage: $generation->language,
+            cvConvention: CvConvention::forDocument($generation->language, $profile->cv_convention),
             reportLanguage: $user->locale,
             system: PromptOverride::resolveFor($user, PromptKey::System),
             playbook: PromptOverride::resolveFor($user, PromptKey::Playbook),

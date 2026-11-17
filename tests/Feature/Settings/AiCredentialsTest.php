@@ -49,7 +49,7 @@ it('validates new keys', function (array $input, string $field): void {
         ->post(route('ai-credentials.store'), ['provider' => 'anthropic', 'api_key' => 'sk-ant-abcdefgh', ...$input])
         ->assertSessionHasErrors($field);
 })->with([
-    'unknown provider' => [['provider' => 'openai'], 'provider'],
+    'unknown provider' => [['provider' => 'mistral'], 'provider'],
     'key required' => [['api_key' => ''], 'api_key'],
     'key too short' => [['api_key' => 'sk-123'], 'api_key'],
     'key with spaces' => [['api_key' => 'sk ant abcdefgh'], 'api_key'],
@@ -81,7 +81,7 @@ it('explains a rejected key and leaves it unverified', function (): void {
         ->post(route('ai-credential-verifications.store', $credential))
         ->assertRedirect(route('ai-credentials.index'))
         ->assertInertiaFlash('toast.type', 'error')
-        ->assertInertiaFlash('toast.message', 'Anthropic rejected the API key. Check that it is correct and still active, then save it again.');
+        ->assertInertiaFlash('toast.message', 'Anthropic rejected the API key. Check that it is correct and still active, then save it again. Details from Anthropic: “invalid x-api-key”');
 
     expect($credential->fresh()->last_verified_at)->toBeNull();
 });
@@ -130,3 +130,80 @@ it("answers 404 when acting on another user's key", function (string $method, st
     'make default' => ['post', 'default-ai-credentials.store'],
     'delete' => ['delete', 'ai-credentials.destroy'],
 ]);
+
+it('stores an OpenAI key with its suggested model', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('ai-credentials.store'), ['provider' => 'openai', 'api_key' => 'sk-proj-abcdefgh-9z8y', 'model' => ''])
+        ->assertRedirect(route('ai-credentials.index'))
+        ->assertSessionHasNoErrors();
+
+    expect(AiCredential::query()->sole())
+        ->provider->toBe(AiProvider::OpenAI)
+        ->model->toBe('gpt-6-astra')
+        ->key_hint->toBe('9z8y');
+});
+
+it('warns about DeepSeek before a key is added', function (): void {
+    $this->actingAs(User::factory()->create())->get(route('ai-credentials.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('providers.5.value', 'deepseek')
+            ->where('providers.5.defaultModel', 'deepseek-chat')
+            ->where('providers.5.notice', 'DeepSeek processes requests on servers in China, and your CV holds personal data. It can’t read PDFs, so CV import needs another key.')
+            ->where('providers.0.notice', null));
+});
+
+it('explains a rate-limited verification instead of reporting an outage', function (): void {
+    $user = User::factory()->create();
+    $credential = AiCredential::factory()->for($user)->asDefault()->create(['provider' => AiProvider::OpenRouter, 'model' => 'google/gemma-4-31b-it:free']);
+    Http::fake(['openrouter.ai/*' => Http::response(['error' => ['message' => 'rate-limited upstream', 'code' => 429]], 429)]);
+
+    $this->actingAs($user)->post(route('ai-credential-verifications.store', $credential))
+        ->assertRedirect()
+        ->assertInertiaFlash('toast.type', 'error')
+        ->assertInertiaFlash('toast.message', 'OpenRouter is limiting requests for “google/gemma-4-31b-it:free” right now. Wait a minute and try again. Free models (ending in “:free”) have low limits and are often busy; a paid model avoids this. Details from OpenRouter: “rate-limited upstream”');
+
+    expect($credential->fresh()->last_verified_at)->toBeNull();
+});
+
+it('changes the model of a key and asks to test it again', function (): void {
+    $user = User::factory()->create();
+    $credential = AiCredential::factory()->for($user)->asDefault()->create(['provider' => AiProvider::OpenRouter, 'model' => 'google/gemma-4-31b-it:free', 'last_verified_at' => now()]);
+    $encryptedKey = $credential->getRawOriginal('api_key');
+
+    $this->actingAs($user)->patch(route('ai-credentials.update', $credential), ['model' => ' anthropic/claude-sonnet-5.5 '])
+        ->assertRedirect(route('ai-credentials.index'))
+        ->assertInertiaFlash('toast.type', 'success');
+
+    $credential->refresh();
+    expect($credential->model)->toBe('anthropic/claude-sonnet-5.5')
+        ->and($credential->last_verified_at)->toBeNull()
+        ->and($credential->getRawOriginal('api_key'))->toBe($encryptedKey)
+        ->and($credential->is_default)->toBeTrue();
+});
+
+it('keeps the verification when the model is saved unchanged', function (): void {
+    $user = User::factory()->create();
+    $credential = AiCredential::factory()->for($user)->create(['model' => 'claude-sonnet-5-5', 'last_verified_at' => now()]);
+
+    $this->actingAs($user)->patch(route('ai-credentials.update', $credential), ['model' => 'claude-sonnet-5-5']);
+
+    expect($credential->fresh()->last_verified_at)->not->toBeNull();
+});
+
+it('validates the new model', function (string $model): void {
+    $user = User::factory()->create();
+    $credential = AiCredential::factory()->for($user)->create(['model' => 'claude-sonnet-5-5']);
+
+    $this->actingAs($user)->patch(route('ai-credentials.update', $credential), ['model' => $model])->assertSessionHasErrors('model');
+
+    expect($credential->fresh()->model)->toBe('claude-sonnet-5-5');
+})->with(['empty' => [''], 'spaces' => ['claude sonnet'], 'too long' => [str_repeat('m', 201)]]);
+
+it("answers 404 when changing another user's key", function (): void {
+    $credential = AiCredential::factory()->create(['model' => 'claude-sonnet-5-5']);
+
+    $this->actingAs(User::factory()->create())->patch(route('ai-credentials.update', $credential), ['model' => 'other'])->assertNotFound();
+
+    expect($credential->fresh()->model)->toBe('claude-sonnet-5-5');
+});

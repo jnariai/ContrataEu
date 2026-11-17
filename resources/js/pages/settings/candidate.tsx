@@ -1,4 +1,5 @@
 import { Form, Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import CandidateProfileController from '@/actions/App/Http/Controllers/Settings/CandidateProfileController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -23,7 +24,7 @@ type Props = {
         headline: string | null;
         location: string | null;
         work_authorization: string | null;
-        region_convention: string | null;
+        cv_convention: string;
         links: {
             linkedin: string | null;
             github: string | null;
@@ -32,16 +33,28 @@ type Props = {
         default_output_language: LanguageValue;
     };
     exists: boolean;
-    regionConventions: string[];
+    cvConventions: ConventionOption[];
+    brazilConvention: { label: string; description: string };
 };
+
+type ConventionOption = { value: string; label: string; description: string };
 
 export default function CandidateProfile({
     profile,
     exists,
-    regionConventions,
+    cvConventions,
+    brazilConvention,
 }: Props) {
     const { t } = useTrans();
     const { languages } = usePage().props;
+    const [outputLanguage, setOutputLanguage] = useState(
+        profile.default_output_language,
+    );
+    const [convention, setConvention] = useState(profile.cv_convention);
+    const chosen =
+        cvConventions.find((option) => option.value === convention) ??
+        cvConventions[0];
+    const applied = outputLanguage === 'pt-BR' ? brazilConvention : chosen;
 
     const textFields = [
         {
@@ -131,72 +144,130 @@ export default function CandidateProfile({
                                 </div>
                             ))}
 
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="region_convention">
-                                        {t('CV conventions')}
-                                    </Label>
-                                    <Input
-                                        id="region_convention"
-                                        name="region_convention"
-                                        list="region-conventions"
-                                        defaultValue={
-                                            profile.region_convention ?? ''
-                                        }
-                                        placeholder="EU"
-                                    />
-                                    <datalist id="region-conventions">
-                                        {regionConventions.map((region) => (
-                                            <option
-                                                key={region}
-                                                value={region}
-                                            />
+                            <div className="grid gap-2">
+                                <Label htmlFor="default_output_language">
+                                    {t('Default output language')}
+                                </Label>
+                                <Select
+                                    name="default_output_language"
+                                    value={outputLanguage}
+                                    onValueChange={(value) =>
+                                        setOutputLanguage(
+                                            value as LanguageValue,
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="default_output_language"
+                                        className="sm:max-w-xs"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {languages.map((language) => (
+                                            <SelectItem
+                                                key={language.value}
+                                                value={language.value}
+                                            >
+                                                {language.label}
+                                            </SelectItem>
                                         ))}
-                                    </datalist>
-                                    <p className="text-xs text-muted-foreground">
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    {t(
+                                        'Prefills the language of new applications. You can change it per job.',
+                                    )}
+                                </p>
+                                <InputError
+                                    message={errors.default_output_language}
+                                />
+                            </div>
+
+                            <fieldset className="grid gap-3 rounded-lg border p-4">
+                                <legend className="px-1 text-sm font-medium">
+                                    {t('CV conventions')}
+                                </legend>
+                                <p className="text-sm text-muted-foreground">
+                                    {t(
+                                        'Each region expects different things in a CV: how long it is, which personal details to show and which to leave out, and how to write your location. The language of each application picks the convention:',
+                                    )}
+                                </p>
+                                <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                                    <li>
+                                        <span className="font-medium text-foreground">
+                                            {t('Portuguese (Brazil) documents')}
+                                        </span>
+                                        {': '}
                                         {t(
-                                            'The region whose CV norms to follow (personal data, photo, date style).',
+                                            'always follow Brazilian conventions, since they are for jobs in Brazil.',
                                         )}
-                                    </p>
-                                    <InputError
-                                        message={errors.region_convention}
-                                    />
-                                </div>
+                                    </li>
+                                    <li>
+                                        <span className="font-medium text-foreground">
+                                            {t('English documents')}
+                                        </span>
+                                        {': '}
+                                        {t(
+                                            'follow the convention you pick here.',
+                                        )}
+                                    </li>
+                                </ul>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="default_output_language">
-                                        {t('Default output language')}
+                                    <Label htmlFor="cv_convention">
+                                        {t('Convention for English documents')}
                                     </Label>
                                     <Select
-                                        name="default_output_language"
-                                        defaultValue={
-                                            profile.default_output_language
-                                        }
+                                        name="cv_convention"
+                                        value={convention}
+                                        onValueChange={setConvention}
                                     >
-                                        <SelectTrigger id="default_output_language">
+                                        <SelectTrigger
+                                            id="cv_convention"
+                                            className="sm:max-w-xs"
+                                        >
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {languages.map((language) => (
+                                            {cvConventions.map((option) => (
                                                 <SelectItem
-                                                    key={language.value}
-                                                    value={language.value}
+                                                    key={option.value}
+                                                    value={option.value}
                                                 >
-                                                    {language.label}
+                                                    {option.label}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <p className="text-xs text-muted-foreground">
-                                        {t(
-                                            'Prefills the language of new applications. You can change it per job.',
-                                        )}
-                                    </p>
                                     <InputError
-                                        message={errors.default_output_language}
+                                        message={errors.cv_convention}
                                     />
                                 </div>
-                            </div>
+
+                                <p
+                                    className="rounded-md bg-muted/50 p-3 text-sm"
+                                    aria-live="polite"
+                                >
+                                    <span className="font-medium">
+                                        {t(
+                                            'New applications in :language use: :convention.',
+                                            {
+                                                language:
+                                                    languages.find(
+                                                        (language) =>
+                                                            language.value ===
+                                                            outputLanguage,
+                                                    )?.label ?? outputLanguage,
+                                                convention: applied.label,
+                                            },
+                                        )}
+                                    </span>{' '}
+                                    <span className="text-muted-foreground">
+                                        {applied.description}
+                                    </span>
+                                </p>
+                            </fieldset>
 
                             <fieldset className="grid gap-4">
                                 <legend className="mb-2 text-sm font-medium">

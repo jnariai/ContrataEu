@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Datas\BuiltPrompt;
 use App\Datas\PromptContext;
+use App\Enums\CvConvention;
 use App\Enums\Language;
 
 /**
@@ -36,7 +37,7 @@ class BuildGenerationPrompt
                 $context->wantsRecruiterMessage ? trim($context->recruiterMessageInstructions) : null,
                 $context->questions !== [] ? trim($context->screeningAnswerInstructions) : null,
             ]))),
-            $this->tag('language_rules', $this->languageRules($context->documentLanguage, $context->reportLanguage)),
+            $this->tag('language_rules', $this->languageRules($context->documentLanguage, $context->reportLanguage, $context->cvConvention)),
             $this->tag('output_contract', $this->appPart('cv-source-structure', $this->structureReplacements($context->documentLanguage))."\n\n".$this->output($context)),
         ]));
 
@@ -49,7 +50,7 @@ class BuildGenerationPrompt
         );
     }
 
-    private function languageRules(Language $document, Language $report): string
+    private function languageRules(Language $document, Language $report, CvConvention $convention): string
     {
         $rules = $this->appPart('language', [
             ...$this->structureReplacements($document),
@@ -58,7 +59,11 @@ class BuildGenerationPrompt
             ':present' => $document->presentWord(),
         ]);
 
-        return $document === Language::PtBr ? $rules."\n\n".$this->appPart('language-pt-br') : $rules;
+        if ($document === Language::PtBr) {
+            $rules .= "\n\n".$this->appPart('language-pt-br');
+        }
+
+        return $rules."\n\n".$this->appPart($convention->promptPart());
     }
 
     private function output(PromptContext $context): string

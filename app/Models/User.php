@@ -71,6 +71,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(PromptOverride::class);
     }
 
+    /** @return HasMany<CvImport, $this> */
+    public function cvImports(): HasMany
+    {
+        return $this->hasMany(CvImport::class);
+    }
+
     /** @return HasMany<AiCredential, $this> */
     public function aiCredentials(): HasMany
     {

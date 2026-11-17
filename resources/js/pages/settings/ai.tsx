@@ -5,6 +5,7 @@ import {
     PlugZap,
     Star,
     Trash2,
+    Pencil,
 } from 'lucide-react';
 import { useState } from 'react';
 import AiCredentialController from '@/actions/App/Http/Controllers/Settings/AiCredentialController';
@@ -34,6 +35,7 @@ type Provider = {
     label: string;
     defaultModel: string;
     keysUrl: string;
+    notice: string | null;
 };
 
 type Credential = {
@@ -89,6 +91,7 @@ export default function AiKeys({ credentials, providers }: Props) {
 
 function CredentialRow({ credential }: { credential: Credential }) {
     const { t, locale } = useTrans();
+    const [editingModel, setEditingModel] = useState(false);
 
     return (
         <li className="space-y-3 rounded-xl border p-4">
@@ -111,7 +114,67 @@ function CredentialRow({ credential }: { credential: Credential }) {
             </div>
             <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-4">
                 <dt className="text-muted-foreground">{t('Model')}</dt>
-                <dd className="font-mono break-all">{credential.model}</dd>
+                <dd>
+                    {editingModel ? (
+                        <Form
+                            {...AiCredentialController.update.form(
+                                credential.id,
+                            )}
+                            options={{ preserveScroll: true }}
+                            onSuccess={() => setEditingModel(false)}
+                            className="flex flex-wrap items-start gap-2"
+                        >
+                            {({ processing, errors }) => (
+                                <>
+                                    <Label
+                                        htmlFor={`model-${credential.id}`}
+                                        className="sr-only"
+                                    >
+                                        {t('Model')}
+                                    </Label>
+                                    <Input
+                                        id={`model-${credential.id}`}
+                                        name="model"
+                                        defaultValue={credential.model}
+                                        required
+                                        autoFocus
+                                        spellCheck={false}
+                                        className="h-8 max-w-xs font-mono"
+                                    />
+                                    <Button size="sm" disabled={processing}>
+                                        {t('Save')}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setEditingModel(false)}
+                                    >
+                                        {t('Cancel')}
+                                    </Button>
+                                    <InputError
+                                        message={errors.model}
+                                        className="w-full"
+                                    />
+                                </>
+                            )}
+                        </Form>
+                    ) : (
+                        <span className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono break-all">
+                                {credential.model}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setEditingModel(true)}
+                                className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                            >
+                                <Pencil className="size-3" />
+                                {t('Change')}
+                            </button>
+                        </span>
+                    )}
+                </dd>
                 <dt className="text-muted-foreground">{t('Key')}</dt>
                 <dd className="font-mono">{credential.masked_key}</dd>
             </dl>
@@ -189,7 +252,7 @@ function AddCredential({ providers }: { providers: Provider[] }) {
                 variant="small"
                 title={t('Add a key')}
                 description={t(
-                    'Anthropic, Google Gemini, OpenRouter or Groq. Usage is billed by your provider.',
+                    'Anthropic, OpenAI, Google Gemini, OpenRouter, Groq or DeepSeek. Usage is billed by your provider.',
                 )}
             />
 
@@ -223,6 +286,14 @@ function AddCredential({ providers }: { providers: Provider[] }) {
                                 </SelectContent>
                             </Select>
                             <InputError message={errors.provider} />
+                            {provider.notice && (
+                                <p
+                                    className="rounded-md bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                    role="note"
+                                >
+                                    {provider.notice}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid gap-2">

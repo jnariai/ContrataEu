@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Enums\CvConvention;
 use App\Enums\Language;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UpdateCandidateProfileRequest;
@@ -23,7 +24,7 @@ class CandidateProfileController extends Controller
                 'headline' => $profile?->headline,
                 'location' => $profile?->location,
                 'work_authorization' => $profile?->work_authorization,
-                'region_convention' => $profile?->region_convention,
+                'cv_convention' => ($profile->cv_convention ?? CvConvention::International)->value,
                 'links' => [
                     'linkedin' => $profile?->links['linkedin'] ?? null,
                     'github' => $profile?->links['github'] ?? null,
@@ -32,7 +33,8 @@ class CandidateProfileController extends Controller
                 'default_output_language' => ($profile->default_output_language ?? $request->user()->locale)->value,
             ],
             'exists' => $profile !== null,
-            'regionConventions' => ['EU', 'UK', 'US', 'BR', 'LATAM'],
+            'cvConventions' => CvConvention::options(),
+            'brazilConvention' => ['label' => CvConvention::Brazil->label(), 'description' => CvConvention::Brazil->description()],
         ]);
     }
 
@@ -44,7 +46,7 @@ class CandidateProfileController extends Controller
             headline: $request->optional('headline'),
             location: $request->optional('location'),
             workAuthorization: $request->optional('work_authorization'),
-            regionConvention: $request->optional('region_convention'),
+            cvConvention: $request->enum('cv_convention', CvConvention::class),
             links: $request->links(),
             defaultOutputLanguage: Language::from($request->string('default_output_language')->toString()),
         );

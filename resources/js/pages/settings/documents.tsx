@@ -1,8 +1,13 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { FileText, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
+import MasterCvPreviewController from '@/actions/App/Http/Controllers/Settings/MasterCvPreviewController';
+import CvImportController from '@/actions/App/Http/Controllers/Settings/CvImportController';
 import MasterDocumentController from '@/actions/App/Http/Controllers/Settings/MasterDocumentController';
 import MasterDocumentFileController from '@/actions/App/Http/Controllers/Settings/MasterDocumentFileController';
+import CvImport from '@/components/cv-import';
+import DocumentPreview from '@/components/document-preview';
+import type { CvImportState } from '@/components/cv-import';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +31,8 @@ type MasterDocument = {
 
 type Props = {
     documents: MasterDocument[];
+    cvImport: CvImportState | null;
+    canImportCv: { allowed: boolean; reason: string | null };
     maxCharacters: number;
     maxUploadKilobytes: number;
 };
@@ -44,6 +51,8 @@ const hints: Record<MasterDocument['type'], string> = {
 
 export default function Documents({
     documents,
+    cvImport,
+    canImportCv,
     maxCharacters,
     maxUploadKilobytes,
 }: Props) {
@@ -64,8 +73,14 @@ export default function Documents({
 
                 {documents.map((document) => (
                     <DocumentEditor
-                        key={document.type}
+                        key={
+                            document.type === 'cv' && cvImport?.markdown
+                                ? `cv:${cvImport.id}`
+                                : document.type
+                        }
                         document={document}
+                        cvImport={document.type === 'cv' ? cvImport : null}
+                        canImportCv={canImportCv}
                         maxCharacters={maxCharacters}
                         maxUploadKilobytes={maxUploadKilobytes}
                     />
@@ -77,15 +92,22 @@ export default function Documents({
 
 function DocumentEditor({
     document,
+    cvImport,
+    canImportCv,
     maxCharacters,
     maxUploadKilobytes,
 }: {
     document: MasterDocument;
+    cvImport: CvImportState | null;
+    canImportCv: { allowed: boolean; reason: string | null };
     maxCharacters: number;
     maxUploadKilobytes: number;
 }) {
     const { t, locale } = useTrans();
-    const [length, setLength] = useState(document.content?.length ?? 0);
+    // A finished PDF import fills the CV editor (unsaved); the field remounts when it arrives or goes away.
+    const imported = cvImport?.markdown ? cvImport : null;
+    const content = imported?.markdown ?? document.content ?? '';
+    const [length, setLength] = useState(content.length);
     const fieldId = `content-${document.type}`;
 
     return (
@@ -107,6 +129,48 @@ function DocumentEditor({
                 )}
             </div>
 
+            {document.type === 'cv' && (
+                <CvImport
+                    cvImport={cvImport}
+                    canImport={canImportCv}
+                    maxUploadKilobytes={maxUploadKilobytes}
+                />
+            )}
+
+            {imported && (
+                <div
+                    className="flex flex-wrap items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                    role="status"
+                >
+                    <p className="min-w-0 flex-1">
+                        <span className="font-medium">
+                            {t('Imported from :file, not saved yet.', {
+                                file: imported.file_name ?? 'PDF',
+                            })}
+                        </span>{' '}
+                        {t(
+                            'Check every section against your PDF, then Save. Saving also keeps the PDF as your CV’s original file.',
+                        )}
+                    </p>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link
+                            href={CvImportController.destroy(imported.id)}
+                            as="button"
+                            preserveScroll
+                            onBefore={() =>
+                                confirm(
+                                    t(
+                                        'Discard the imported text and keep your saved CV?',
+                                    ),
+                                )
+                            }
+                        >
+                            {t('Discard import')}
+                        </Link>
+                    </Button>
+                </div>
+            )}
+
             <Form
                 {...MasterDocumentController.update.form(document.type)}
                 options={{ preserveScroll: true }}
@@ -120,10 +184,17 @@ function DocumentEditor({
                         <p className="text-sm text-muted-foreground">
                             {t(hints[document.type])}
                         </p>
+                        {imported && (
+                            <input
+                                type="hidden"
+                                name="import"
+                                value={imported.id}
+                            />
+                        )}
                         <Textarea
                             id={fieldId}
                             name="content"
-                            defaultValue={document.content ?? ''}
+                            defaultValue={content}
                             required={document.required}
                             maxLength={maxCharacters}
                             rows={document.type === 'cv' ? 18 : 8}
@@ -139,7 +210,22 @@ function DocumentEditor({
                                 {maxCharacters.toLocaleString(locale.htmlLang)}
                             </span>
                         </div>
-                        <Button disabled={processing}>{t('Save')}</Button>
+                        <div className="flex flex-wrap gap-2">
+                            <Button disabled={processing}>{t('Save')}</Button>
+                            {document.type === 'cv' && (
+                                <DocumentPreview
+                                    url={MasterCvPreviewController.store.url()}
+                                    title={document.label}
+                                    getContent={() =>
+                                        (
+                                            window.document.getElementById(
+                                                fieldId,
+                                            ) as HTMLTextAreaElement | null
+                                        )?.value ?? ''
+                                    }
+                                />
+                            )}
+                        </div>
                     </>
                 )}
             </Form>

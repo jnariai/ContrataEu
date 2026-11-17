@@ -44,6 +44,13 @@
         li { margin: 0 0 2pt; }
 
         @yield('styles')
+
+        @if ($forScreen ?? false)
+        /* On-screen preview only: an A4 sheet with the PDF's margins on a grey background. */
+        html { background: #e5e7eb; }
+        body { background: #fff; width: 210mm; min-height: 297mm; margin: 16px auto; padding: 15mm 16mm; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); }
+        a { pointer-events: none; }
+        @endif
     </style>
 </head>
 <body>
