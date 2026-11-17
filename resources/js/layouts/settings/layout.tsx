@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
+import { index as aiCredentials } from '@/routes/ai-credentials';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editCandidateProfile } from '@/routes/candidate-profile';
+import { index as masterDocuments } from '@/routes/master-documents';
 import { edit } from '@/routes/profile';
+import { index as promptOverrides } from '@/routes/prompt-overrides';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 import { useTrans } from '@/hooks/use-trans';
@@ -14,7 +18,27 @@ import { tk } from '@/lib/i18n';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: tk('Profile'),
+        title: tk('Candidate profile'),
+        href: editCandidateProfile(),
+        icon: null,
+    },
+    {
+        title: tk('Documents'),
+        href: masterDocuments(),
+        icon: null,
+    },
+    {
+        title: tk('AI keys'),
+        href: aiCredentials(),
+        icon: null,
+    },
+    {
+        title: tk('Prompts'),
+        href: promptOverrides(),
+        icon: null,
+    },
+    {
+        title: tk('Account'),
         href: edit(),
         icon: null,
     },
@@ -70,10 +94,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <Separator className="my-6 lg:hidden" />
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
-                        {children}
-                    </section>
+                <div className="min-w-0 flex-1 lg:max-w-3xl">
+                    <section className="space-y-12">{children}</section>
                 </div>
             </div>
         </div>

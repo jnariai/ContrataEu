@@ -34,6 +34,38 @@ class CandidateProfile extends Model
     /** @use HasFactory<CandidateProfileFactory> */
     use HasFactory;
 
+    /**
+     * Creates or updates the user's single profile.
+     *
+     * @param  array{linkedin: string|null, github: string|null, portfolio: string|null}  $links
+     */
+    public static function saveFor(
+        User $user,
+        string $fullName,
+        ?string $headline,
+        ?string $location,
+        ?string $workAuthorization,
+        ?string $regionConvention,
+        array $links,
+        Language $defaultOutputLanguage,
+    ): self {
+        $profile = self::query()->whereBelongsTo($user)->first() ?? new self;
+
+        $profile->fill([
+            'full_name' => $fullName,
+            'headline' => $headline,
+            'location' => $location,
+            'work_authorization' => $workAuthorization,
+            'region_convention' => $regionConvention,
+            'links' => $links,
+            'default_output_language' => $defaultOutputLanguage,
+        ]);
+        $profile->user()->associate($user);
+        $profile->save();
+
+        return $profile;
+    }
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {

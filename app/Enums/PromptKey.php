@@ -27,6 +27,24 @@ enum PromptKey: string
         };
     }
 
+    public function description(): string
+    {
+        return match ($this) {
+            self::System => __('Who the AI is and how it treats the job description.'),
+            self::Playbook => __('Screening and writing rules every document must follow.'),
+            self::CvInstructions => __('How to tailor the CV for the job.'),
+            self::CoverLetterInstructions => __('How to write the cover letter, when you ask for one.'),
+            self::RecruiterMessageInstructions => __('How to write the message to the recruiter, when you ask for one.'),
+            self::ScreeningAnswerInstructions => __('How to answer the job’s screening questions.'),
+        };
+    }
+
+    /** The app's default text for this section (a Markdown file shipped with the app). */
+    public function defaultContent(): string
+    {
+        return (string) file_get_contents($this->defaultPath());
+    }
+
     public function defaultPath(): string
     {
         return resource_path('prompts/'.str_replace('_', '-', $this->value).'.md');

@@ -8,6 +8,8 @@ use App\Enums\FilePurpose;
 use Carbon\CarbonImmutable;
 use Database\Factories\MasterDocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +33,42 @@ class MasterDocument extends Model
 {
     /** @use HasFactory<MasterDocumentFactory> */
     use HasFactory;
+
+    public static function saveFor(User $user, DocumentType $type, string $content): self
+    {
+        $document = self::findFor($user, $type) ?? new self(['type' => $type]);
+
+        $document->fill(['content' => $content]);
+        $document->user()->associate($user);
+        $document->save();
+
+        return $document;
+    }
+
+    public static function findFor(User $user, DocumentType $type): ?self
+    {
+        return self::query()->whereBelongsTo($user)->ofType($type)->first();
+    }
+
+    /** Deletes the attached original (row and object), if any. */
+    public function removeOriginalFile(): void
+    {
+        $this->originalFile()->first()?->delete();
+    }
+
+    /** Deletes the document with its original file; SQL cascades would skip the file's object. */
+    public function deleteWithFile(): void
+    {
+        $this->removeOriginalFile();
+        $this->delete();
+    }
+
+    /** @param Builder<self> $query */
+    #[Scope]
+    protected function ofType(Builder $query, DocumentType $type): void
+    {
+        $query->where('type_id', LookupCast::idOf('document_types', $type));
+    }
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo

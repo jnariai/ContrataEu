@@ -7,6 +7,8 @@ use App\Enums\PromptKey;
 use Carbon\CarbonImmutable;
 use Database\Factories\PromptOverrideFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +30,30 @@ class PromptOverride extends Model
 {
     /** @use HasFactory<PromptOverrideFactory> */
     use HasFactory;
+
+    public static function saveFor(User $user, PromptKey $key, string $content): self
+    {
+        $override = self::query()->whereBelongsTo($user)->forKey($key)->first() ?? new self(['key' => $key]);
+
+        $override->fill(['content' => $content]);
+        $override->user()->associate($user);
+        $override->save();
+
+        return $override;
+    }
+
+    /** Back to the app's default: the override simply stops existing. */
+    public static function resetFor(User $user, PromptKey $key): void
+    {
+        self::query()->whereBelongsTo($user)->forKey($key)->delete();
+    }
+
+    /** @param Builder<self> $query */
+    #[Scope]
+    protected function forKey(Builder $query, PromptKey $key): void
+    {
+        $query->where('key_id', LookupCast::idOf('prompt_keys', $key));
+    }
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
