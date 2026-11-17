@@ -4,6 +4,8 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Prism\Prism\Testing\StructuredResponseFake;
+use Prism\Prism\ValueObjects\Usage;
 use Tests\TestCase;
 
 /*
@@ -50,6 +52,46 @@ expect()->extend('toBeOne', function () {
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+/**
+ * A structured AI answer that satisfies the output contract, for Prism::fake().
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function generationAnswer(array $overrides = []): array
+{
+    return [
+        'report' => [
+            'jd_analysis' => [
+                'must_haves' => ['5+ years PHP', 'Laravel'],
+                'nice_to_haves' => ['AWS'],
+                'seniority' => 'Senior',
+                'domain' => 'Payments',
+                'keywords' => ['PHP', 'Laravel', 'PostgreSQL', 'AWS'],
+                'knockouts' => ['EU work authorization'],
+            ],
+            'matches' => [
+                ['requirement' => 'Laravel', 'evidence' => 'Backend Engineer at Acme', 'strength' => 'strong'],
+                ['requirement' => 'AWS', 'evidence' => 'Not in the master CV', 'strength' => 'missing'],
+            ],
+            'keyword_coverage' => ['matched' => 3, 'total' => 4, 'missing' => ['AWS']],
+            'red_flags' => [],
+            'gaps' => ['No AWS experience'],
+            'todos' => ['How much faster did billing get?'],
+            'interview_questions' => ['Tell me about the billing migration.'],
+        ],
+        'cv_markdown' => "# Jane Doe\nLisbon, Portugal · jane@example.com\n\n## Experience\n### Backend Engineer — Acme\n*Mar 2022 – Present · Remote*\n- Cut billing run time by [TODO: metric?] with queued Laravel jobs.\n",
+        ...$overrides,
+    ];
+}
+
+function fakeGenerationResponse(array $structured, int $inputTokens = 1500, int $outputTokens = 2500): StructuredResponseFake
+{
+    return StructuredResponseFake::make()
+        ->withStructured($structured)
+        ->withUsage(new Usage($inputTokens, $outputTokens));
+}
 
 /**
  * Fakes the files disk (R2) and makes its signed URLs predictable: https://r2.test/{path}?expires=…&{options}.

@@ -60,6 +60,103 @@ class Application extends Model
 
     public const string PUBLIC_ID_PREFIX = 'app_';
 
+    public static function open(
+        User $user,
+        string $companyName,
+        string $roleTitle,
+        ?string $jobUrl,
+        ?string $location,
+        ?WorkMode $workMode,
+        Language $language,
+        ?string $companyNotes,
+        string $jobDescription,
+        bool $wantsCoverLetter,
+        bool $wantsRecruiterMessage,
+    ): self {
+        $application = new self(['status' => ApplicationStatus::Draft]);
+        $application->user()->associate($user);
+        $application->revise($companyName, $roleTitle, $jobUrl, $location, $workMode, $language, $companyNotes, $jobDescription, $wantsCoverLetter, $wantsRecruiterMessage);
+
+        return $application;
+    }
+
+    /**
+     * Changing the job details or options never touches existing generations: they keep what they were made from,
+     * and the next generation uses the new values (including a new output language).
+     */
+    public function revise(
+        string $companyName,
+        string $roleTitle,
+        ?string $jobUrl,
+        ?string $location,
+        ?WorkMode $workMode,
+        Language $language,
+        ?string $companyNotes,
+        string $jobDescription,
+        bool $wantsCoverLetter,
+        bool $wantsRecruiterMessage,
+    ): void {
+        $this->fill([
+            'company_name' => $companyName,
+            'role_title' => $roleTitle,
+            'job_url' => $jobUrl,
+            'location' => $location,
+            'work_mode' => $workMode,
+            'language' => $language,
+            'company_notes' => $companyNotes,
+            'job_description' => $jobDescription,
+            'wants_cover_letter' => $wantsCoverLetter,
+            'wants_recruiter_message' => $wantsRecruiterMessage,
+        ]);
+        $this->save();
+    }
+
+    /**
+     * The user moves the application through their pipeline by hand. The first time it becomes Applied,
+     * `applied_at` records when; moving away and back keeps that first date.
+     */
+    public function changeStatus(ApplicationStatus $status, CarbonImmutable $at): void
+    {
+        $this->update([
+            'status' => $status,
+            'applied_at' => $this->applied_at ?? ($status === ApplicationStatus::Applied ? $at : null),
+        ]);
+    }
+
+    /**
+     * A finished generation becomes the version the user sees. A draft becomes Ready; later statuses (Applied, …)
+     * are the user's pipeline and stay as they are.
+     */
+    public function adoptGeneration(Generation $generation): void
+    {
+        $this->currentGeneration()->associate($generation);
+
+        if ($this->status === ApplicationStatus::Draft) {
+            $this->status = ApplicationStatus::Ready;
+        }
+
+        $this->save();
+    }
+
+    /** The next version number: versions keep counting up even after old ones are pruned. */
+    public function nextGenerationVersion(): int
+    {
+        return ((int) $this->generations()->max('version')) + 1;
+    }
+
+    /** @return array<string, int> status value => number of the user's applications in it */
+    public static function countsByStatusFor(User $user): array
+    {
+        return self::query()->whereBelongsTo($user)
+            ->selectRaw('status_id, count(*) as aggregate')
+            ->groupBy('status_id')
+            ->pluck('aggregate', 'status_id')
+            ->mapWithKeys(static fn (mixed $count, int|string $statusId): array => [
+                LookupCast::caseOf(ApplicationStatus::class, 'application_statuses', (int) $statusId)->value => (int) $count,
+            ])
+            ->all();
+    }
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { LayoutGrid } from 'lucide-react';
+import { FilePlus2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { create as createApplication } from '@/routes/applications';
 import type { NavItem } from '@/types';
 import { tk } from '@/lib/i18n';
 
@@ -22,6 +23,11 @@ const mainNavItems: NavItem[] = [
         title: tk('Dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: tk('New application'),
+        href: createApplication(),
+        icon: FilePlus2,
     },
 ];
 

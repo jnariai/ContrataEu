@@ -17,6 +17,16 @@ enum DocumentType: string
         };
     }
 
+    /** The order documents are shown in: the CV first. */
+    public function sortOrder(): int
+    {
+        return match ($this) {
+            self::Cv => 1,
+            self::CoverLetter => 2,
+            self::RecruiterMessage => 3,
+        };
+    }
+
     /** Only the CV must exist before generating; the others are optional inspiration. */
     public function isRequired(): bool
     {

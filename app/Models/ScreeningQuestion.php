@@ -30,6 +30,21 @@ class ScreeningQuestion extends Model
 
     public const string PUBLIC_ID_PREFIX = 'q_';
 
+    public static function ask(Application $application, string $question, int $position): self
+    {
+        $screeningQuestion = new self(['question' => $question, 'position' => $position]);
+        $screeningQuestion->application()->associate($application);
+        $screeningQuestion->save();
+
+        return $screeningQuestion;
+    }
+
+    /** Rewording keeps the row, so answers in earlier generations stay linked to it. */
+    public function rephrase(string $question, int $position): void
+    {
+        $this->update(['question' => $question, 'position' => $position]);
+    }
+
     /** @return BelongsTo<Application, $this> */
     public function application(): BelongsTo
     {

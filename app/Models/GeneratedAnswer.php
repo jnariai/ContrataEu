@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPublicId;
+use App\Models\Concerns\KeepsOriginalContent;
 use Carbon\CarbonImmutable;
 use Database\Factories\GeneratedAnswerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -32,8 +33,20 @@ class GeneratedAnswer extends Model
     use HasFactory;
 
     use HasPublicId;
+    use KeepsOriginalContent;
 
     public const string PUBLIC_ID_PREFIX = 'ans_';
+
+    /** The AI's answer becomes both the editable content and the original kept for "revert". */
+    public static function write(Generation $generation, ScreeningQuestion $question, string $content): self
+    {
+        $answer = new self(['content' => $content, 'original_content' => $content]);
+        $answer->generation()->associate($generation);
+        $answer->screeningQuestion()->associate($question);
+        $answer->save();
+
+        return $answer;
+    }
 
     /** @return BelongsTo<Generation, $this> */
     public function generation(): BelongsTo

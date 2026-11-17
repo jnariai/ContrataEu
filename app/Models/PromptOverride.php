@@ -42,6 +42,12 @@ class PromptOverride extends Model
         return $override;
     }
 
+    /** The text a generation uses for this section: the user's override, or the app default. */
+    public static function resolveFor(User $user, PromptKey $key): string
+    {
+        return self::query()->whereBelongsTo($user)->forKey($key)->value('content') ?? $key->defaultContent();
+    }
+
     /** Back to the app's default: the override simply stops existing. */
     public static function resetFor(User $user, PromptKey $key): void
     {

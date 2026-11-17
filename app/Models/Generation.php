@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Casts\GenerationReportCast;
 use App\Casts\LookupCast;
+use App\Datas\GenerationReport;
 use App\Enums\AiProvider;
 use App\Enums\GenerationStatus;
 use App\Enums\Language;
@@ -10,6 +12,8 @@ use App\Models\Concerns\HasPublicId;
 use Carbon\CarbonImmutable;
 use Database\Factories\GenerationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,7 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $model
  * @property int $language_id
  * @property Language $language
- * @property array<string, mixed>|null $report
+ * @property GenerationReport|null $report
  * @property int|null $input_tokens
  * @property int|null $output_tokens
  * @property string|null $error
@@ -54,6 +58,86 @@ class Generation extends Model
     use HasPublicId;
 
     public const string PUBLIC_ID_PREFIX = 'gen_';
+
+    /**
+     * A new run waiting for the queue. Provider, model and language are copied now, so later changes to the key or
+     * the application never rewrite what this version was made with.
+     */
+    public static function queue(Application $application, int $version, AiProvider $provider, string $model, Language $language): self
+    {
+        $generation = new self([
+            'version' => $version,
+            'status' => GenerationStatus::Queued,
+            'provider' => $provider,
+            'model' => $model,
+            'language' => $language,
+        ]);
+        $generation->application()->associate($application);
+        $generation->save();
+
+        return $generation;
+    }
+
+    /**
+     * Moves Queued → Running. Returns false when it isn't queued any more (a retried or duplicate job), so the caller
+     * does nothing instead of running the AI twice.
+     */
+    public function start(CarbonImmutable $at): bool
+    {
+        $claimed = self::query()
+            ->whereKey($this->id)
+            ->where('status_id', LookupCast::idOf('generation_statuses', GenerationStatus::Queued))
+            ->update([
+                'status_id' => LookupCast::idOf('generation_statuses', GenerationStatus::Running),
+                'started_at' => $at,
+                'updated_at' => $at,
+            ]) === 1;
+
+        $this->refresh();
+
+        return $claimed;
+    }
+
+    public function succeed(GenerationReport $report, int $inputTokens, int $outputTokens, CarbonImmutable $at): void
+    {
+        $this->update([
+            'status' => GenerationStatus::Succeeded,
+            'report' => $report,
+            'input_tokens' => $inputTokens,
+            'output_tokens' => $outputTokens,
+            'error' => null,
+            'finished_at' => $at,
+        ]);
+    }
+
+    /** `$error` is shown to the user: it must already be safe (no keys, no raw provider payloads). */
+    public function fail(string $error, CarbonImmutable $at): void
+    {
+        if ($this->status->isFinished()) {
+            return;
+        }
+
+        $this->update([
+            'status' => GenerationStatus::Failed,
+            'error' => $error,
+            'finished_at' => $at,
+        ]);
+    }
+
+    public function isFinished(): bool
+    {
+        return $this->status->isFinished();
+    }
+
+    /** @param Builder<self> $query */
+    #[Scope]
+    protected function unfinished(Builder $query): void
+    {
+        $query->whereIn('status_id', array_map(
+            static fn (GenerationStatus $status): int => LookupCast::idOf('generation_statuses', $status),
+            GenerationStatus::unfinished(),
+        ));
+    }
 
     /** @return BelongsTo<Application, $this> */
     public function application(): BelongsTo
@@ -80,7 +164,7 @@ class Generation extends Model
             'status' => LookupCast::of(GenerationStatus::class, 'generation_statuses', 'status_id'),
             'provider' => LookupCast::of(AiProvider::class, 'ai_providers', 'provider_id'),
             'language' => LookupCast::of(Language::class, 'languages', 'language_id'),
-            'report' => 'array',
+            'report' => GenerationReportCast::class,
             'version' => 'integer',
             'input_tokens' => 'integer',
             'output_tokens' => 'integer',

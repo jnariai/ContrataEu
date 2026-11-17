@@ -2,10 +2,13 @@
 
 namespace App\Gateways\Prism;
 
+use App\Datas\BuiltPrompt;
+use App\Datas\GenerationOutput;
 use App\Enums\AiProvider;
 use App\Exceptions\AiProviderRejectedRequest;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use InvalidArgumentException;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Exceptions\PrismException;
 use Prism\Prism\Exceptions\PrismProviderOverloadedException;
@@ -23,6 +26,11 @@ class PrismClient
 
     private const int PING_TIMEOUT_SECONDS = 20;
 
+    /** Below the job's 150 s timeout, so a slow provider fails the generation cleanly instead of killing the worker. */
+    private const int GENERATION_TIMEOUT_SECONDS = 120;
+
+    private const int GENERATION_MAX_TOKENS = 16_000;
+
     /**
      * Makes the smallest possible call, to prove the key and model work.
      *
@@ -37,6 +45,35 @@ class PrismClient
             ->withMaxTokens(5)
             ->withPrompt('Reply with the single word: OK')
             ->asText());
+    }
+
+    /**
+     * One structured call that returns the whole package: report, CV and the requested extras.
+     *
+     * @throws AiProviderRejectedRequest when the key or model is wrong (the user can fix it)
+     * @throws AiProviderException when the provider is unavailable or the answer doesn't fit the contract
+     */
+    public function generate(AiProvider $provider, string $model, string $apiKey, BuiltPrompt $prompt): GenerationOutput
+    {
+        $response = $this->call($provider, $model, fn () => Prism::structured()
+            ->using(self::prismProvider($provider), $model, ['api_key' => $apiKey])
+            ->withClientOptions(['timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
+            ->withMaxTokens(self::GENERATION_MAX_TOKENS)
+            ->withSystemPrompt($prompt->system)
+            ->withPrompt($prompt->user)
+            ->withSchema(GenerationSchema::for($prompt))
+            ->asStructured());
+
+        try {
+            return GenerationSchema::read(
+                $response->structured ?? [],
+                $prompt,
+                $response->usage->promptTokens,
+                $response->usage->completionTokens,
+            );
+        } catch (InvalidArgumentException $exception) {
+            throw AiProviderException::malformedAnswer($exception);
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Casts\LookupCast;
 use App\Enums\DocumentType;
 use App\Enums\FilePurpose;
 use App\Models\Concerns\HasPublicId;
+use App\Models\Concerns\KeepsOriginalContent;
 use Carbon\CarbonImmutable;
 use Database\Factories\GeneratedDocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -37,8 +38,19 @@ class GeneratedDocument extends Model
     use HasFactory;
 
     use HasPublicId;
+    use KeepsOriginalContent;
 
     public const string PUBLIC_ID_PREFIX = 'doc_';
+
+    /** The AI's text becomes both the editable content and the original kept for "revert". */
+    public static function write(Generation $generation, DocumentType $type, string $content): self
+    {
+        $document = new self(['type' => $type, 'content' => $content, 'original_content' => $content]);
+        $document->generation()->associate($generation);
+        $document->save();
+
+        return $document;
+    }
 
     /** @return BelongsTo<Generation, $this> */
     public function generation(): BelongsTo

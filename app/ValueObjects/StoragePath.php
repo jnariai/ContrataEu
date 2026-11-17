@@ -38,7 +38,16 @@ final readonly class StoragePath implements JsonSerializable, Stringable
             throw new InvalidArgumentException("[{$type->value}] documents have no PDF.");
         }
 
-        return new self(self::userDirectory($userId)."/applications/{$applicationId}/v{$version}/{$type->value}.pdf");
+        return new self(self::applicationDirectory($userId, $applicationId)."/v{$version}/{$type->value}.pdf");
+    }
+
+    public static function applicationDirectory(int $userId, int $applicationId): string
+    {
+        if ($applicationId < 1) {
+            throw new InvalidArgumentException("Invalid application id [{$applicationId}].");
+        }
+
+        return self::userDirectory($userId)."/applications/{$applicationId}";
     }
 
     public static function userDirectory(int $userId): string
