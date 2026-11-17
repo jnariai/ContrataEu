@@ -8,6 +8,7 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -46,11 +47,24 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => $message, 'code' => $e instanceof BusinessRuleException ? $e->errorCode : 'gateway_unavailable'], $e->status);
             }
 
-            if ($request->isMethod('GET')) {
-                return null; // default error page with the exception's status (see M8 for the Inertia error page)
+            // Page loads keep the exception's status; AppServiceProvider::configureErrorPages() then swaps this plain
+            // response for the Inertia error page with the same safe message.
+            if ($request->isMethodSafe()) {
+                return response($message, $e->status);
             }
 
             Inertia::flash('toast', ['type' => 'error', 'message' => $message]);
+
+            return back();
+        });
+
+        // Too many writes (the `writes` limiter): stay on the page with a toast instead of an error page.
+        $exceptions->render(static function (ThrottleRequestsException $e, Request $request) {
+            if ($request->isMethodSafe() || ! $request->header('X-Inertia')) {
+                return null;
+            }
+
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('Too many requests in a short time. Wait a minute and try again.')]);
 
             return back();
         });

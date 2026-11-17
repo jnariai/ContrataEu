@@ -41,6 +41,7 @@ class GenerationResource extends JsonResource
                     'type' => $document->type->value,
                     'label' => $document->type->label(),
                     'content' => $document->content,
+                    'has_pdf' => $document->type->hasPdf(),
                     'edited' => $document->isEdited(),
                     'updated_at' => $document->updated_at->toIso8601ZuluString(),
                     'todos' => CvMarkdown::fromString($document->content)->todos(),

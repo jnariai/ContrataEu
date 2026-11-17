@@ -1,11 +1,13 @@
 <?php
 
+use App\Gateways\PdfRenderer;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Prism\Prism\Testing\StructuredResponseFake;
 use Prism\Prism\ValueObjects\Usage;
+use Smalot\PdfParser\Parser as PdfParser;
 use Tests\TestCase;
 
 /*
@@ -105,4 +107,85 @@ function fakeFilesDisk(): FilesystemAdapter
     );
 
     return $disk;
+}
+
+/**
+ * Swaps the PDF renderer for one that records the HTML it gets and returns a tiny fake PDF.
+ *
+ * @return PdfRenderer&object{calls: int, html: list<string>}
+ */
+function fakePdfRenderer(): PdfRenderer
+{
+    $fake = new class implements PdfRenderer
+    {
+        public int $calls = 0;
+
+        /** @var list<string> */
+        public array $html = [];
+
+        public function render(string $html): string
+        {
+            $this->calls++;
+            $this->html[] = $html;
+
+            return '%PDF-1.7 fake';
+        }
+    };
+
+    app()->instance(PdfRenderer::class, $fake);
+
+    return $fake;
+}
+
+/**
+ * The text of a dompdf PDF in reading order, one line per text block, like "select all → copy → paste".
+ * smalot/pdfparser garbles the 2-byte Unicode text dompdf writes for embedded fonts (accents become "??"),
+ * so this reads the page content streams with smalot and decodes the string operands (UTF-16BE) itself.
+ */
+function pdfText(string $pdf): string
+{
+    $lines = [];
+
+    foreach ((new PdfParser)->parseContent($pdf)->getPages() as $page) {
+        $contents = $page->get('Contents');
+        $streams = method_exists($contents, 'getContent') ? [$contents->getContent()] : [];
+
+        foreach ($streams as $stream) {
+            preg_match_all('/BT(.*?)ET/s', $stream, $blocks);
+
+            foreach ($blocks[1] as $block) {
+                $line = '';
+                $length = strlen($block);
+
+                for ($i = 0; $i < $length; $i++) {
+                    if ($block[$i] !== '(') {
+                        continue;
+                    }
+
+                    $bytes = '';
+                    for ($i++; $i < $length && $block[$i] !== ')'; $i++) {
+                        if ($block[$i] === '\\') {
+                            $next = $block[++$i];
+                            if (ctype_digit($next)) {
+                                $octal = substr($block, $i, 3);
+                                $octal = preg_replace('/[^0-7].*$/', '', $octal);
+                                $bytes .= chr((int) octdec($octal));
+                                $i += strlen($octal) - 1;
+                            } else {
+                                $bytes .= ['n' => "\n", 'r' => "\r", 't' => "\t", 'b' => "\x08", 'f' => "\f"][$next] ?? $next;
+                            }
+                        } else {
+                            $bytes .= $block[$i];
+                        }
+                    }
+
+                    $line .= mb_convert_encoding($bytes, 'UTF-8', 'UTF-16BE');
+                }
+
+                $lines[] = trim($line);
+            }
+        }
+    }
+
+    return implode("\n", array_filter($lines, fn (string $line): bool => $line !== ''));
 }

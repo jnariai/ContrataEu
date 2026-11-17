@@ -44,6 +44,7 @@ enum DocumentType: string
         };
     }
 
+    /** @return view-string|null */
     public function pdfView(): ?string
     {
         return match ($this) {

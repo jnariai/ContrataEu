@@ -55,6 +55,7 @@ export type GeneratedDocument = {
     id: string;
     type: 'cv' | 'cover_letter' | 'recruiter_message';
     label: string;
+    has_pdf: boolean;
     content: string;
     edited: boolean;
     updated_at: string;

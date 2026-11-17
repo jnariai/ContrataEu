@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Str;
 
 /**
  * Tailored text for one document type inside a generation. Editable; `original_content` allows a revert.
@@ -50,6 +51,23 @@ class GeneratedDocument extends Model
         $document->save();
 
         return $document;
+    }
+
+    /**
+     * `Firstname-Lastname-Role.pdf`, plus `-Cover-Letter` (or the pt-BR suffix) for a cover letter. ASCII only, so
+     * every ATS and mail client keeps it intact. Callers eager-load `generation.application`.
+     */
+    public function pdfFilename(string $candidateName): string
+    {
+        $parts = [$candidateName, $this->generation->application->role_title];
+
+        if ($this->type === DocumentType::CoverLetter) {
+            $parts[] = $this->generation->language->coverLetterFilenameSuffix();
+        }
+
+        $slug = trim((string) preg_replace('/[^A-Za-z0-9]+/', '-', Str::ascii(implode(' ', $parts))), '-');
+
+        return ($slug === '' ? $this->type->value : $slug).'.pdf';
     }
 
     /** @return BelongsTo<Generation, $this> */

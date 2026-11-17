@@ -7,6 +7,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\GeneratedAnswerController;
 use App\Http\Controllers\GeneratedAnswerRevertController;
 use App\Http\Controllers\GeneratedDocumentController;
+use App\Http\Controllers\GeneratedDocumentPdfController;
 use App\Http\Controllers\GeneratedDocumentRevertController;
 use App\Http\Controllers\GenerationController;
 use App\Http\Controllers\LocaleController;
@@ -16,7 +17,7 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::patch('locale', [LocaleController::class, 'update'])->middleware('throttle:30,1')->name('locale.update');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:writes'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('applications', ApplicationController::class)->except('index')
@@ -32,6 +33,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('generated-documents/{document}/revert', [GeneratedDocumentRevertController::class, 'store'])
         ->middleware('can:update,document')
         ->name('generated-documents.revert');
+    Route::get('generated-documents/{document}/pdf', [GeneratedDocumentPdfController::class, 'show'])
+        ->middleware(['can:view,document', 'throttle:30,1'])
+        ->name('generated-documents.pdf');
     Route::patch('generated-answers/{answer}', [GeneratedAnswerController::class, 'update'])->name('generated-answers.update');
     Route::post('generated-answers/{answer}/revert', [GeneratedAnswerRevertController::class, 'store'])
         ->middleware('can:update,answer')
@@ -43,3 +47,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// Unknown URLs still run the web middleware (session, locale, auth), so the 404 page knows the user and language.
+Route::fallback(static fn () => abort(404));

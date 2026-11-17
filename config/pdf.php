@@ -12,7 +12,7 @@ return [
     'cloudflare' => [
         'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
         'token' => env('CLOUDFLARE_API_TOKEN'),
-        'timeout' => (int) env('CLOUDFLARE_BROWSER_RENDERING_TIMEOUT', 30),
+        'timeout' => (int) env('CLOUDFLARE_BROWSER_RENDERING_TIMEOUT', 20),
     ],
 
 ];

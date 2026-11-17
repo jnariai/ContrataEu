@@ -1,6 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import type { RouteDefinition } from '@/wayfinder';
-import { Copy, RotateCcw, Save } from 'lucide-react';
+import { Copy, Download, RotateCcw, Save } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 import InputError from '@/components/input-error';
@@ -24,7 +24,7 @@ export default function GeneratedTextEditor({
     update,
     revert,
     canEdit,
-    actions,
+    pdfUrl,
 }: {
     id: string;
     label: ReactNode;
@@ -35,7 +35,8 @@ export default function GeneratedTextEditor({
     update: RouteDefinition<'patch'>;
     revert: RouteDefinition<'post'>;
     canEdit: boolean;
-    actions?: ReactNode;
+    /** Download link for documents that have a PDF; the PDF shows the saved text, so it waits for a save. */
+    pdfUrl?: string;
 }) {
     const { t, locale } = useTrans();
     const form = useForm({ content });
@@ -117,7 +118,28 @@ export default function GeneratedTextEditor({
                     <Copy className="size-4" />
                     {t('Copy')}
                 </Button>
-                {actions}
+                {pdfUrl &&
+                    (form.isDirty ? (
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled
+                            title={t(
+                                'Save your changes to download them as a PDF.',
+                            )}
+                        >
+                            <Download className="size-4" />
+                            {t('Download PDF')}
+                        </Button>
+                    ) : (
+                        <Button size="sm" variant="outline" asChild>
+                            <a href={pdfUrl}>
+                                <Download className="size-4" />
+                                {t('Download PDF')}
+                            </a>
+                        </Button>
+                    ))}
                 {canEdit && edited && (
                     <Button
                         type="button"
