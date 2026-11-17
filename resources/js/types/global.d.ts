@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { CurrentLocale, LanguageOption, Translations } from '@/types/i18n';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -11,6 +12,9 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            locale: CurrentLocale;
+            languages: LanguageOption[];
+            translations: Translations;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

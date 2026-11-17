@@ -9,40 +9,43 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
+import { useTrans } from '@/hooks/use-trans';
+import { tk } from '@/lib/i18n';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: tk('Profile'),
         href: edit(),
         icon: null,
     },
     {
-        title: 'Security',
+        title: tk('Security'),
         href: editSecurity(),
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: tk('Appearance'),
         href: editAppearance(),
         icon: null,
     },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
+    const { t } = useTrans();
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title={t('Settings')}
+                description={t('Manage your profile and account settings')}
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav
                         className="flex flex-col space-y-1 space-x-0"
-                        aria-label="Settings"
+                        aria-label={t('Settings')}
                     >
                         {sidebarNavItems.map((item, index) => (
                             <Button
@@ -58,7 +61,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                     {item.icon && (
                                         <item.icon className="h-4 w-4" />
                                     )}
-                                    {item.title}
+                                    {t(item.title)}
                                 </Link>
                             </Button>
                         ))}

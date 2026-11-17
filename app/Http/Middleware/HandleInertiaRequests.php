@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Language;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -39,9 +41,40 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => fn (): ?array => $request->user() === null ? null : [
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'email_verified_at' => $request->user()->email_verified_at?->toIso8601ZuluString(),
+                ],
             ],
+            'locale' => fn (): array => $this->currentLanguage(),
+            'languages' => Inertia::once(fn (): array => Language::options()),
+            'translations' => Inertia::once(fn (): array => $this->translations())->as('translations.'.app()->getLocale()),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /** @return array{value: string, label: string, htmlLang: string} */
+    private function currentLanguage(): array
+    {
+        $language = Language::fromLaravelLocale(app()->getLocale());
+
+        return ['value' => $language->value, 'label' => $language->label(), 'htmlLang' => $language->htmlLang()];
+    }
+
+    /**
+     * The current locale's JSON translations: the same file `__()` reads, so PHP and React share one source.
+     *
+     * @return array<string, string>
+     */
+    private function translations(): array
+    {
+        $path = lang_path(app()->getLocale().'.json');
+
+        if (! is_file($path)) {
+            return [];
+        }
+
+        return json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
     }
 }

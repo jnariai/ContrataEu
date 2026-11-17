@@ -1,6 +1,9 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /*
@@ -15,7 +18,11 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
+    ->use(LazilyRefreshDatabase::class)
+    ->beforeEach(function (): void {
+        Http::preventStrayRequests();
+        fakeFilesDisk(); // no Feature test ever touches the real bucket
+    })
     ->in('Feature');
 
 /*
@@ -44,7 +51,16 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Fakes the files disk (R2) and makes its signed URLs predictable: https://r2.test/{path}?expires=…&{options}.
+ */
+function fakeFilesDisk(): FilesystemAdapter
 {
-    // ..
+    $disk = Storage::fake(config('filesystems.files_disk'));
+
+    $disk->buildTemporaryUrlsUsing(
+        fn (string $path, DateTimeInterface $expiresAt, array $options = []): string => 'https://r2.test/'.$path.'?'.http_build_query(['expires' => $expiresAt->getTimestamp(), ...$options]),
+    );
+
+    return $disk;
 }

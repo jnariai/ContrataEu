@@ -31,5 +31,14 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="INERTIA_SSR_ENABLED" value="false"/>
+        <env name="FILES_DISK" value="r2"/>
+        <env name="CLOUDFLARE_R2_ACCESS_KEY_ID" value=""/>
+        <env name="CLOUDFLARE_R2_SECRET_ACCESS_KEY" value=""/>
+        <env name="CLOUDFLARE_R2_BUCKET" value="testing"/>
+        <env name="CLOUDFLARE_R2_ENDPOINT" value="http://127.0.0.1:9"/>
+        <env name="CLOUDFLARE_ACCOUNT_ID" value="test-account"/>
+        <env name="CLOUDFLARE_API_TOKEN" value="test-token"/>
+        <env name="PDF_DRIVER" value="dompdf"/>
     </php>
 </phpunit>
