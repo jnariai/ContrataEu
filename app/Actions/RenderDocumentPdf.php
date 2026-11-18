@@ -47,7 +47,7 @@ class RenderDocumentPdf
         $generation = $document->generation;
         $application = $generation->application;
         $profile = $application->user->candidateProfile;
-        $title = Str::beforeLast($document->pdfFilename($profile->full_name ?? $application->user->name), '.pdf');
+        $title = Str::beforeLast($document->pdfFilename($application->user->nameOnFiles()), '.pdf');
 
         if ($document->type === DocumentType::Cv) {
             return $this->cvHtml($content, $generation->language, $title, $forScreen);

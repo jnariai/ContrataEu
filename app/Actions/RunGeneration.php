@@ -45,7 +45,7 @@ class RunGeneration
             $credential = $this->credentialFor($generation, $application->user);
             $prompt = $this->buildPrompt->handle($this->context($generation, $questions));
 
-            $output = $this->client->generate($generation->provider, $generation->model, $credential->api_key, $prompt);
+            $output = $this->client->generate($generation->provider, $generation->model, $credential->api_key, $prompt, $credential->base_url);
 
             $this->persistOutput->handle($generation, $output, $questions);
         } catch (BusinessRuleException $exception) {

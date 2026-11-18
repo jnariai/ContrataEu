@@ -61,6 +61,28 @@ it('saves no convention choice as International / EU', function (): void {
     expect($user->candidateProfile()->sole()->cv_convention)->toBeNull();
 });
 
+it('saves the name on files, or none when left blank', function (string $input, ?string $stored, string $nameOnFiles): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->put(route('candidate-profile.update'), validCandidateProfile(['full_name' => 'Jonathan Nariai dos Santos', 'file_name' => $input]));
+
+    expect($user->candidateProfile()->sole())
+        ->file_name->toBe($stored)
+        ->nameOnFiles()->toBe($nameOnFiles);
+})->with([
+    'chosen' => ['  Jonathan Nariai ', 'Jonathan Nariai', 'Jonathan Nariai'],
+    'blank: first name and last surname' => ['', null, 'Jonathan Santos'],
+]);
+
+it('suggests first name and last surname as the name on files', function (): void {
+    $user = User::factory()->create(['name' => 'Maria da Silva e Souza']);
+
+    $this->actingAs($user)->get(route('candidate-profile.edit'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('profile.file_name', null)
+            ->where('profile.suggested_file_name', 'Maria Souza'));
+});
+
 it('validates the profile', function (array $input, string $field): void {
     $this->actingAs(User::factory()->create())
         ->put(route('candidate-profile.update'), validCandidateProfile($input))
@@ -71,6 +93,7 @@ it('validates the profile', function (array $input, string $field): void {
     'only http links' => [['links' => ['github' => 'javascript:alert(1)']], 'links.github'],
     'supported output language' => [['default_output_language' => 'fr'], 'default_output_language'],
     'known convention' => [['cv_convention' => 'eu'], 'cv_convention'],
+    'name on files at most 60 characters' => [['file_name' => str_repeat('n', 61)], 'file_name'],
     'Brazil is not an English-document convention' => [['cv_convention' => 'brazil'], 'cv_convention'],
 ]);
 

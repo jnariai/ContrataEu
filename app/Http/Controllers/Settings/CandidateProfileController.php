@@ -21,6 +21,8 @@ class CandidateProfileController extends Controller
         return Inertia::render('settings/candidate', [
             'profile' => [
                 'full_name' => $profile->full_name ?? $request->user()->name,
+                'file_name' => $profile?->file_name,
+                'suggested_file_name' => CandidateProfile::shortName($profile->full_name ?? $request->user()->name),
                 'headline' => $profile?->headline,
                 'location' => $profile?->location,
                 'work_authorization' => $profile?->work_authorization,
@@ -43,6 +45,7 @@ class CandidateProfileController extends Controller
         CandidateProfile::saveFor(
             $request->user(),
             fullName: $request->string('full_name')->trim()->toString(),
+            fileName: $request->optional('file_name'),
             headline: $request->optional('headline'),
             location: $request->optional('location'),
             workAuthorization: $request->optional('work_authorization'),

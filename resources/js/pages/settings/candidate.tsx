@@ -21,6 +21,8 @@ import type { LanguageValue } from '@/types';
 type Props = {
     profile: {
         full_name: string;
+        file_name: string | null;
+        suggested_file_name: string;
         headline: string | null;
         location: string | null;
         work_authorization: string | null;
@@ -127,6 +129,26 @@ export default function CandidateProfile({
                                     autoComplete="name"
                                 />
                                 <InputError message={errors.full_name} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="file_name">
+                                    {t('Name on files (optional)')}
+                                </Label>
+                                <Input
+                                    id="file_name"
+                                    name="file_name"
+                                    defaultValue={profile.file_name ?? ''}
+                                    placeholder={profile.suggested_file_name}
+                                    maxLength={60}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    {t(
+                                        'Recruiters save CVs by name, so your PDFs are named after it (Name-CV.pdf). Leave empty to use “:name”, your first name and last surname.',
+                                        { name: profile.suggested_file_name },
+                                    )}
+                                </p>
+                                <InputError message={errors.file_name} />
                             </div>
 
                             {textFields.map((field) => (

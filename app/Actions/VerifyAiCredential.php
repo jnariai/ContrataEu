@@ -15,7 +15,7 @@ class VerifyAiCredential
 
     public function handle(AiCredential $credential): void
     {
-        $this->client->ping($credential->provider, $credential->model, $credential->api_key);
+        $this->client->ping($credential->provider, $credential->model, $credential->api_key, $credential->base_url);
 
         $credential->markVerified(now()->toImmutable());
     }

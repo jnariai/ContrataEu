@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property string $full_name
+ * @property string|null $file_name the name used in PDF file names; null means first name and last surname
  * @property string|null $headline
  * @property string|null $location
  * @property string|null $work_authorization
@@ -30,11 +31,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $updated_at
  * @property-read User $user
  */
-#[Fillable(['full_name', 'headline', 'location', 'work_authorization', 'cv_convention', 'links', 'default_output_language'])]
+#[Fillable(['full_name', 'file_name', 'headline', 'location', 'work_authorization', 'cv_convention', 'links', 'default_output_language'])]
 class CandidateProfile extends Model
 {
     /** @use HasFactory<CandidateProfileFactory> */
     use HasFactory;
+
+    /** Lowercase name particles never taken as the surname for file names. */
+    private const array NAME_PARTICLES = ['da', 'das', 'de', 'del', 'della', 'der', 'di', 'do', 'dos', 'du', 'e', 'la', 'le', 'van', 'von', 'y'];
 
     /**
      * Creates or updates the user's single profile.
@@ -44,6 +48,7 @@ class CandidateProfile extends Model
     public static function saveFor(
         User $user,
         string $fullName,
+        ?string $fileName,
         ?string $headline,
         ?string $location,
         ?string $workAuthorization,
@@ -55,6 +60,7 @@ class CandidateProfile extends Model
 
         $profile->fill([
             'full_name' => $fullName,
+            'file_name' => $fileName,
             'headline' => $headline,
             'location' => $location,
             'work_authorization' => $workAuthorization,
@@ -66,6 +72,27 @@ class CandidateProfile extends Model
         $profile->save();
 
         return $profile;
+    }
+
+    /** The name the candidate's PDFs are filed under: their own choice, or first name and last surname. */
+    public function nameOnFiles(): string
+    {
+        return $this->file_name ?? self::shortName($this->full_name);
+    }
+
+    /**
+     * First name and last surname, the way recruiters file and search CVs: "Jonathan Nariai dos Santos" →
+     * "Jonathan Santos". Name particles (dos, da, de, van…) never stand in for the surname.
+     */
+    public static function shortName(string $fullName): string
+    {
+        $words = preg_split('/\s+/', trim($fullName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $surnames = array_values(array_filter(
+            array_slice($words, 1),
+            static fn (string $word): bool => ! in_array(mb_strtolower($word), self::NAME_PARTICLES, true),
+        ));
+
+        return trim(($words[0] ?? '').' '.($surnames === [] ? '' : $surnames[array_key_last($surnames)]));
     }
 
     /** @return BelongsTo<User, $this> */

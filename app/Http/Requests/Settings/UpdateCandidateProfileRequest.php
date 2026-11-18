@@ -15,6 +15,7 @@ class UpdateCandidateProfileRequest extends FormRequest
     {
         return [
             'full_name' => ['required', 'string', 'max:120'],
+            'file_name' => ['nullable', 'string', 'max:60'],
             'headline' => ['nullable', 'string', 'max:160'],
             'location' => ['nullable', 'string', 'max:120'],
             'work_authorization' => ['nullable', 'string', 'max:160'],

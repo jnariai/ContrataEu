@@ -35,8 +35,9 @@ import { index } from '@/routes/ai-credentials';
 type Provider = {
     value: string;
     label: string;
-    defaultModel: string;
-    keysUrl: string;
+    defaultModel: string | null;
+    keysUrl: string | null;
+    needsBaseUrl: boolean;
     notice: string | null;
 };
 
@@ -44,6 +45,7 @@ type Credential = {
     id: string;
     name: string | null;
     provider: { value: string; label: string };
+    base_url: string | null;
     model: string;
     masked_key: string;
     active: boolean;
@@ -158,6 +160,16 @@ function CredentialRow({ credential }: { credential: Credential }) {
                 />
             ) : (
                 <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-4">
+                    {credential.base_url && (
+                        <>
+                            <dt className="text-muted-foreground">
+                                {t('Address')}
+                            </dt>
+                            <dd className="font-mono break-all">
+                                {credential.base_url}
+                            </dd>
+                        </>
+                    )}
                     <dt className="text-muted-foreground">{t('Model')}</dt>
                     <dd className="font-mono break-all">{credential.model}</dd>
                     <dt className="text-muted-foreground">{t('Key')}</dt>
@@ -257,6 +269,23 @@ function EditCredential({
                         />
                         <InputError message={errors.name} />
                     </div>
+                    {credential.base_url !== null && (
+                        <div className="grid gap-1.5 sm:col-span-2">
+                            <Label htmlFor={`base-url-${credential.id}`}>
+                                {t('Base URL')}
+                            </Label>
+                            <Input
+                                id={`base-url-${credential.id}`}
+                                name="base_url"
+                                type="url"
+                                defaultValue={credential.base_url}
+                                required
+                                spellCheck={false}
+                                className="font-mono"
+                            />
+                            <InputError message={errors.base_url} />
+                        </div>
+                    )}
                     <div className="grid gap-1.5">
                         <Label htmlFor={`model-${credential.id}`}>
                             {t('Model')}
@@ -309,7 +338,7 @@ function AddCredential({
                 variant="small"
                 title={t('Add a key')}
                 description={t(
-                    'Anthropic, OpenAI, Google Gemini, OpenRouter, OrcaRouter, Groq or DeepSeek. Usage is billed by your provider.',
+                    'Anthropic, OpenAI, Google Gemini, OpenRouter, Groq, DeepSeek or any OpenAI-compatible service. Usage is billed by your provider.',
                 )}
             />
 
@@ -356,17 +385,19 @@ function AddCredential({
                         <div className="grid gap-2">
                             <div className="flex items-center justify-between gap-2">
                                 <Label htmlFor="api_key">{t('API key')}</Label>
-                                <a
-                                    href={provider.keysUrl}
-                                    target="_blank"
-                                    rel="noreferrer noopener"
-                                    className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
-                                >
-                                    {t('Get a :provider key', {
-                                        provider: provider.label,
-                                    })}
-                                    <ExternalLink className="size-3" />
-                                </a>
+                                {provider.keysUrl && (
+                                    <a
+                                        href={provider.keysUrl}
+                                        target="_blank"
+                                        rel="noreferrer noopener"
+                                        className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
+                                    >
+                                        {t('Get a :provider key', {
+                                            provider: provider.label,
+                                        })}
+                                        <ExternalLink className="size-3" />
+                                    </a>
+                                )}
                             </div>
                             <PasswordInput
                                 id="api_key"
@@ -378,20 +409,50 @@ function AddCredential({
                             <InputError message={errors.api_key} />
                         </div>
 
+                        {provider.needsBaseUrl && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="base_url">
+                                    {t('Base URL')}
+                                </Label>
+                                <Input
+                                    id="base_url"
+                                    name="base_url"
+                                    type="url"
+                                    required
+                                    placeholder="https://api.example.com/v1"
+                                    className="font-mono"
+                                    spellCheck={false}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    {t(
+                                        'The API address from your provider’s docs, usually ending in /v1 (for OrcaRouter: https://api.orcarouter.ai/v1). It must be a public HTTPS server.',
+                                    )}
+                                </p>
+                                <InputError message={errors.base_url} />
+                            </div>
+                        )}
+
                         <div className="grid gap-2">
                             <Label htmlFor="model">{t('Model')}</Label>
                             <Input
                                 id="model"
                                 name="model"
-                                placeholder={provider.defaultModel}
+                                placeholder={
+                                    provider.defaultModel ?? 'openai/gpt-5'
+                                }
+                                required={provider.defaultModel === null}
                                 className="font-mono"
                                 spellCheck={false}
                             />
                             <p className="text-xs text-muted-foreground">
-                                {t(
-                                    'Leave empty to use :model. Any model id your provider supports works.',
-                                    { model: provider.defaultModel },
-                                )}
+                                {provider.defaultModel
+                                    ? t(
+                                          'Leave empty to use :model. Any model id your provider supports works.',
+                                          { model: provider.defaultModel },
+                                      )
+                                    : t(
+                                          'The model id exactly as your provider lists it.',
+                                      )}
                             </p>
                             <InputError message={errors.model} />
                         </div>

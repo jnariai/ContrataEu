@@ -28,7 +28,7 @@ class GetDocumentPdfUrl
 
         $document->loadMissing(['pdfFile', 'generation.application.user.candidateProfile']);
         $application = $document->generation->application;
-        $filename = $document->pdfFilename($application->user->candidateProfile->full_name ?? $application->user->name);
+        $filename = $document->pdfFilename($application->user->nameOnFiles());
 
         $file = $document->pdfFile ?? $this->storeFile->handle(
             $application->user,

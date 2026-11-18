@@ -6,6 +6,7 @@ use App\Enums\DocumentType;
 use App\Enums\Language;
 use App\Enums\PromptKey;
 use App\Gateways\PdfRenderer;
+use App\Gateways\Prism\PublicEndpoint;
 use App\Models\Application;
 use App\Models\CandidateProfile;
 use App\Models\GeneratedDocument;
@@ -267,4 +268,24 @@ function pdfDocument(DocumentType $type = DocumentType::Cv, Language $language =
     $content ??= $type === DocumentType::Cv ? EXAMPLE_CV : "Hello Acme team,\n\nI would love to join.\nI bring 8 years of payments work.\n\nBest,\nJane";
 
     return GeneratedDocument::factory()->for($generation)->create(['type' => $type, 'content' => $content, 'original_content' => $content]);
+}
+
+/**
+ * Answers DNS lookups for OpenAI-compatible base URLs from `$hosts` (host => IPs) instead of the network; an unknown
+ * host doesn't resolve.
+ *
+ * @param  array<string, list<string>>  $hosts
+ */
+function fakeDns(array $hosts = ['api.orcarouter.ai' => ['104.18.20.30']]): void
+{
+    app()->instance(PublicEndpoint::class, new class($hosts) extends PublicEndpoint
+    {
+        /** @param array<string, list<string>> $hosts */
+        public function __construct(private array $hosts) {}
+
+        protected function lookup(string $host): array
+        {
+            return $this->hosts[$host] ?? [];
+        }
+    });
 }

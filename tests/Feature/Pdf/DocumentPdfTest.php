@@ -4,6 +4,7 @@ use App\Actions\RenderDocumentPdf;
 use App\Enums\DocumentType;
 use App\Enums\FilePurpose;
 use App\Enums\Language;
+use App\Models\CandidateProfile;
 use App\Models\StoredFile;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
@@ -43,11 +44,11 @@ it('renders the PDF once, keeps it in the bucket and redirects to a signed downl
     $file = StoredFile::query()->sole();
     expect($file->purpose)->toBe(FilePurpose::DocumentPdf)
         ->and($file->path)->toBe($path)
-        ->and($file->original_name)->toBe('Jane-Doe-Senior-Backend-Engineer.pdf');
+        ->and($file->original_name)->toBe('Jane-Doe-CV.pdf');
     foreach ([$first, $second] as $response) {
         $response->assertRedirect();
         expect($response->headers->get('Location'))->toStartWith("https://r2.test/{$path}?")
-            ->toContain('attachment%3B+filename%3DJane-Doe-Senior-Backend-Engineer.pdf');
+            ->toContain('attachment%3B+filename%3DJane-Doe-CV.pdf');
     }
 });
 
@@ -83,16 +84,36 @@ it("answers 404 for another user's document PDF", function (): void {
     expect($renderer->calls)->toBe(0);
 });
 
-it('names the files Firstname-Lastname-Role, in ASCII, with a cover letter suffix in the document language', function (DocumentType $type, Language $language, string $name, string $role, string $expected): void {
+it('names the files Name-CV, in ASCII, with the cover letter name in the document language', function (DocumentType $type, Language $language, string $nameOnFiles, string $expected): void {
     $document = pdfDocument($type, $language);
-    $document->generation->application->forceFill(['role_title' => $role])->save();
+    $document->generation->application->forceFill(['role_title' => 'Programador(a) Full Stack Sênior'])->save();
 
-    expect($document->fresh()->pdfFilename($name))->toBe($expected);
+    expect($document->fresh()->pdfFilename($nameOnFiles))->toBe($expected);
 })->with([
-    'cv' => [DocumentType::Cv, Language::En, 'Jane Doe', 'Senior Backend Engineer', 'Jane-Doe-Senior-Backend-Engineer.pdf'],
-    'cover letter' => [DocumentType::CoverLetter, Language::En, 'Jane Doe', 'Backend Engineer', 'Jane-Doe-Backend-Engineer-Cover-Letter.pdf'],
-    'pt-BR cover letter' => [DocumentType::CoverLetter, Language::PtBr, 'João Conceição', 'Desenvolvedor(a) Back-end Sênior', 'Joao-Conceicao-Desenvolvedor-a-Back-end-Senior-Carta-de-Apresentacao.pdf'],
+    'cv' => [DocumentType::Cv, Language::En, 'Jane Doe', 'Jane-Doe-CV.pdf'],
+    'pt-BR cv' => [DocumentType::Cv, Language::PtBr, 'João Conceição', 'Joao-Conceicao-CV.pdf'],
+    'cover letter' => [DocumentType::CoverLetter, Language::En, 'Jane Doe', 'Jane-Doe-Cover-Letter.pdf'],
+    'pt-BR cover letter' => [DocumentType::CoverLetter, Language::PtBr, 'João Conceição', 'Joao-Conceicao-Carta-de-Apresentacao.pdf'],
 ]);
+
+it('shortens the name on files to first name and last surname', function (string $fullName, string $expected): void {
+    expect(CandidateProfile::shortName($fullName))->toBe($expected);
+})->with([
+    'brazilian name' => ['Jonathan Nariai dos Santos', 'Jonathan Santos'],
+    'particles never become the surname' => ['  Maria  da Silva e Souza ', 'Maria Souza'],
+    'a single name' => ['Cher', 'Cher'],
+]);
+
+it('names the downloaded PDF with the name on files the candidate chose', function (): void {
+    fakePdfRenderer();
+    $document = pdfDocument();
+    $user = $document->generation->application->user;
+    $user->candidateProfile->forceFill(['full_name' => 'Jonathan Nariai dos Santos', 'file_name' => 'Jonathan Nariai'])->save();
+
+    $this->actingAs($user)->get(route('generated-documents.pdf', $document));
+
+    expect($document->fresh()->pdfFile->original_name)->toBe('Jonathan-Nariai-CV.pdf');
+});
 
 it('renders the CV view with the name as the only h1, one h2 per section and styled date lines', function (): void {
     $html = app(RenderDocumentPdf::class)->html(pdfDocument());

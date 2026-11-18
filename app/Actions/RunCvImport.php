@@ -42,7 +42,7 @@ class RunCvImport
 
             $pdf = (string) $disk->get($file->path);
 
-            $answer = $this->client->readCv($import->provider, $import->model, $credential->api_key, $pdf, self::instructions());
+            $answer = $this->client->readCv($import->provider, $import->model, $credential->api_key, $pdf, self::instructions(), $credential->base_url);
 
             $import->succeed(self::markdownFrom($answer), now()->toImmutable());
         } catch (BusinessRuleException $exception) {

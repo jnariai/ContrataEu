@@ -190,12 +190,84 @@ it('warns about DeepSeek before a key is added', function (): void {
             ->where('providers.0.notice', null));
 });
 
-it('tells the user which OrcaRouter models work before a key is added', function (): void {
+it('offers OpenAI-compatible servers, which need a base URL and a model', function (): void {
     $this->actingAs(User::factory()->create())->get(route('ai-credentials.index'))
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('providers.6.value', 'orcarouter')
-            ->where('providers.6.defaultModel', 'openai/gpt-5')
-            ->where('providers.6.notice', 'Pick a model that supports JSON schema output, such as OpenAI, Gemini or Grok models (not Anthropic ones). It can’t read PDFs, so CV import needs another key.'));
+            ->where('providers.6.value', 'openai_compatible')
+            ->where('providers.6.needsBaseUrl', true)
+            ->where('providers.6.defaultModel', null)
+            ->where('providers.6.keysUrl', null)
+            ->where('providers.6.notice', 'For any service that speaks the OpenAI Chat Completions API, such as OrcaRouter, Together or Fireworks. Pick a model that supports JSON schema output; CV import also needs a model that reads PDFs.')
+            ->where('providers.0.needsBaseUrl', false));
+});
+
+it('stores an OpenAI-compatible key with its base URL, cut back to the API version', function (): void {
+    fakeDns();
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('ai-credentials.store'), ['provider' => 'openai_compatible', 'api_key' => 'sk-orca-abcdefgh', 'base_url' => ' https://api.orcarouter.ai/v1/chat/completions/ ', 'model' => 'openai/gpt-5'])
+        ->assertRedirect(route('ai-credentials.index'))
+        ->assertSessionHasNoErrors();
+
+    $credential = AiCredential::query()->sole();
+    expect($credential->provider)->toBe(AiProvider::OpenAICompatible)
+        ->and($credential->base_url)->toBe('https://api.orcarouter.ai/v1')
+        ->and($credential->displayName())->toBe('api.orcarouter.ai');
+});
+
+it('requires a base URL and a model for an OpenAI-compatible key', function (): void {
+    $this->actingAs(User::factory()->create())
+        ->post(route('ai-credentials.store'), ['provider' => 'openai_compatible', 'api_key' => 'sk-orca-abcdefgh', 'model' => ''])
+        ->assertSessionHasErrors(['base_url' => 'Enter the address of the server, such as https://api.example.com/v1.', 'model']);
+
+    expect(AiCredential::query()->count())->toBe(0);
+});
+
+it('does not save an OpenAI-compatible key whose base URL is not a public HTTPS server', function (string $baseUrl): void {
+    fakeDns(['internal.example.com' => ['10.0.0.7']]);
+
+    $this->actingAs(User::factory()->create())
+        ->post(route('ai-credentials.store'), ['provider' => 'openai_compatible', 'api_key' => 'sk-orca-abcdefgh', 'base_url' => $baseUrl, 'model' => 'm'])
+        ->assertSessionHasErrors('base_url');
+
+    expect(AiCredential::query()->count())->toBe(0);
+})->with([
+    'plain http' => ['http://api.orcarouter.ai/v1'],
+    'loopback' => ['https://127.0.0.1:11434/v1'],
+    'cloud metadata' => ['https://169.254.169.254/latest'],
+    'host on the private network' => ['https://internal.example.com/v1'],
+]);
+
+it('ignores a base URL sent for a provider with a fixed address', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('ai-credentials.store'), ['provider' => 'anthropic', 'api_key' => 'sk-ant-api03-abcdef', 'base_url' => 'https://127.0.0.1/v1'])
+        ->assertSessionHasNoErrors();
+
+    expect(AiCredential::query()->sole()->base_url)->toBeNull();
+});
+
+it('changes an OpenAI-compatible key’s base URL and asks to test it again', function (): void {
+    fakeDns(['api.orcarouter.ai' => ['104.18.20.30'], 'api.together.xyz' => ['104.18.20.31']]);
+    $user = User::factory()->create();
+    $credential = AiCredential::factory()->for($user)->create(['provider' => AiProvider::OpenAICompatible, 'base_url' => 'https://api.orcarouter.ai/v1', 'model' => 'openai/gpt-5', 'last_verified_at' => now()]);
+
+    $this->actingAs($user)->patch(route('ai-credentials.update', $credential), ['model' => 'openai/gpt-5', 'base_url' => 'https://api.together.xyz/v1'])
+        ->assertInertiaFlash('toast.message', 'Key saved. The model or address changed, so use “Test connection” to check it works.');
+
+    expect($credential->fresh())
+        ->base_url->toBe('https://api.together.xyz/v1')
+        ->last_verified_at->toBeNull();
+});
+
+it('does not move an OpenAI-compatible key to a private address', function (): void {
+    $user = User::factory()->create();
+    $credential = AiCredential::factory()->for($user)->create(['provider' => AiProvider::OpenAICompatible, 'base_url' => 'https://8.8.8.8/v1', 'model' => 'm']);
+
+    $this->actingAs($user)->patch(route('ai-credentials.update', $credential), ['model' => 'm', 'base_url' => 'https://10.0.0.1/v1'])
+        ->assertSessionHasErrors('base_url');
+
+    expect($credential->fresh()->base_url)->toBe('https://8.8.8.8/v1');
 });
 
 it('explains a rate-limited verification instead of reporting an outage', function (): void {

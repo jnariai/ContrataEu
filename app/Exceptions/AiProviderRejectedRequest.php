@@ -22,9 +22,22 @@ class AiProviderRejectedRequest extends BusinessRuleException
 
     public static function invalidRequest(AiProvider $provider, string $model, ?Throwable $previous = null, ?string $details = null): self
     {
+        $message = $provider === AiProvider::OpenAICompatible
+            ? __('The server rejected the request. Check that the model “:model” exists, that your account can use it, and that it supports JSON schema output (many servers or models don’t; pick another model if so).', ['model' => $model])
+            : __(':provider rejected the request. Check that the model “:model” exists and that your account can use it.', ['provider' => $provider->label(), 'model' => $model]);
+
         return self::make(
-            __(':provider rejected the request. Check that the model “:model” exists and that your account can use it.', ['provider' => $provider->label(), 'model' => $model]),
+            $message,
             'ai_provider.invalid_request', Response::HTTP_UNPROCESSABLE_ENTITY, $provider, $details, $previous, ['model' => $model],
+        );
+    }
+
+    /** Checked again before every call, because the host's DNS can change after the key was saved. */
+    public static function baseUrlNotPublic(AiProvider $provider): self
+    {
+        return self::make(
+            __('The key’s address must be a public HTTPS server. Edit the key in AI keys and enter the address your provider documents.'),
+            'ai_provider.base_url_not_public', Response::HTTP_UNPROCESSABLE_ENTITY, $provider, null, null,
         );
     }
 

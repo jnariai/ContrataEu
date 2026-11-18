@@ -159,26 +159,46 @@ it('asks DeepSeek for JSON within its 8K output limit and reads the package back
         && $request['max_completion_tokens'] === 8192);
 });
 
-it('sends OrcaRouter calls to its OpenAI-compatible chat completions with the user’s key', function (): void {
+it('sends OpenAI-compatible calls to the key’s base URL as chat completions with the user’s key', function (): void {
+    fakeDns();
     Http::fake(['api.orcarouter.ai/*' => Http::response(deepSeekReply())]);
 
-    app(PrismClient::class)->ping(AiProvider::OrcaRouter, 'openai/gpt-5', 'sk-orca-user-key');
+    app(PrismClient::class)->ping(AiProvider::OpenAICompatible, 'openai/gpt-5', 'sk-orca-user-key', 'https://api.orcarouter.ai/v1');
 
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.orcarouter.ai/v1/chat/completions'
         && $request->header('Authorization') === ['Bearer sk-orca-user-key']
         && $request['model'] === 'openai/gpt-5');
 });
 
-it('asks OrcaRouter for the package as a JSON schema response and reads it back', function (): void {
+it('asks an OpenAI-compatible server for the package as a JSON schema response and reads it back', function (): void {
+    fakeDns();
     Http::fake(['api.orcarouter.ai/*' => Http::response(deepSeekReply(json_encode(generationAnswer(), JSON_THROW_ON_ERROR)))]);
     $prompt = app(BuildGenerationPrompt::class)->handle(promptContext());
 
-    $output = app(PrismClient::class)->generate(AiProvider::OrcaRouter, 'openai/gpt-5', 'sk-orca', $prompt);
+    $output = app(PrismClient::class)->generate(AiProvider::OpenAICompatible, 'openai/gpt-5', 'sk-orca', $prompt, 'https://api.orcarouter.ai/v1');
 
     expect($output->cvMarkdown)->toBe(trim(generationAnswer()['cv_markdown']));
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.orcarouter.ai/v1/chat/completions'
         && $request['response_format']['type'] === 'json_schema'
         && $request['max_tokens'] === 16000);
+});
+
+it('does not call an OpenAI-compatible base URL whose host now resolves to a private address', function (): void {
+    fakeDns(['api.orcarouter.ai' => ['169.254.169.254']]);
+    Http::fake();
+
+    expect(fn () => app(PrismClient::class)->ping(AiProvider::OpenAICompatible, 'openai/gpt-5', 'sk-orca', 'https://api.orcarouter.ai/v1'))
+        ->toThrow(fn (AiProviderRejectedRequest $exception) => expect($exception->errorCode)->toBe('ai_provider.base_url_not_public'));
+    Http::assertNothingSent();
+});
+
+it('tells the user an OpenAI-compatible model may not support JSON schema output when the server rejects the request', function (): void {
+    fakeDns();
+    Http::fake(['api.orcarouter.ai/*' => Http::response(['error' => ['message' => 'response_format json_schema is not supported']], 400)]);
+    $prompt = app(BuildGenerationPrompt::class)->handle(promptContext());
+
+    expect(fn () => app(PrismClient::class)->generate(AiProvider::OpenAICompatible, 'some/model', 'sk-orca', $prompt, 'https://api.orcarouter.ai/v1'))
+        ->toThrow(AiProviderRejectedRequest::class, 'The server rejected the request. Check that the model “some/model” exists, that your account can use it, and that it supports JSON schema output');
 });
 
 it('keeps the larger output limit for the other providers', function (): void {

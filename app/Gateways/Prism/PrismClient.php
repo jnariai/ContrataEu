@@ -25,7 +25,7 @@ use Throwable;
  */
 class PrismClient
 {
-    public function __construct(private ProviderErrorDetails $errorDetails) {}
+    public function __construct(private ProviderErrorDetails $errorDetails, private PublicEndpoint $publicEndpoint) {}
 
     private const int CONNECT_TIMEOUT_SECONDS = 5;
 
@@ -43,19 +43,19 @@ class PrismClient
 
     private const int DEEPSEEK_MAX_TOKENS = 8_192;
 
-    private const string ORCAROUTER_URL = 'https://api.orcarouter.ai/v1';
-
     /**
      * Makes the smallest possible call, to prove the key and model work.
      *
      * @throws AiProviderRejectedRequest when the key or model is wrong (the user can fix it)
      * @throws AiProviderException when the provider is unavailable
      */
-    public function ping(AiProvider $provider, string $model, string $apiKey): void
+    public function ping(AiProvider $provider, string $model, string $apiKey, ?string $baseUrl = null): void
     {
+        [$config, $clientOptions] = $this->endpoint($provider, $apiKey, $baseUrl);
+
         $this->call($provider, $model, fn () => Prism::text()
-            ->using(self::prismProvider($provider), $model, self::providerConfig($provider, $apiKey))
-            ->withClientOptions(['timeout' => self::PING_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
+            ->using(self::prismProvider($provider), $model, $config)
+            ->withClientOptions([...$clientOptions, 'timeout' => self::PING_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
             ->withMaxTokens(5)
             ->withPrompt('Reply with the single word: OK')
             ->asText());
@@ -67,11 +67,13 @@ class PrismClient
      * @throws AiProviderRejectedRequest when the key or model is wrong (the user can fix it)
      * @throws AiProviderException when the provider is unavailable or the answer doesn't fit the contract
      */
-    public function generate(AiProvider $provider, string $model, string $apiKey, BuiltPrompt $prompt): GenerationOutput
+    public function generate(AiProvider $provider, string $model, string $apiKey, BuiltPrompt $prompt, ?string $baseUrl = null): GenerationOutput
     {
+        [$config, $clientOptions] = $this->endpoint($provider, $apiKey, $baseUrl);
+
         $response = $this->call($provider, $model, fn () => Prism::structured()
-            ->using(self::prismProvider($provider), $model, self::providerConfig($provider, $apiKey))
-            ->withClientOptions(['timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
+            ->using(self::prismProvider($provider), $model, $config)
+            ->withClientOptions([...$clientOptions, 'timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
             ->withMaxTokens(self::generationMaxTokens($provider))
             ->withProviderOptions(self::generationProviderOptions($provider))
             ->withSystemPrompt($prompt->system)
@@ -97,11 +99,13 @@ class PrismClient
      * @throws AiProviderRejectedRequest when the key or model is wrong, or the model can't read PDFs
      * @throws AiProviderException when the provider is unavailable
      */
-    public function readCv(AiProvider $provider, string $model, string $apiKey, string $pdf, string $instructions): string
+    public function readCv(AiProvider $provider, string $model, string $apiKey, string $pdf, string $instructions, ?string $baseUrl = null): string
     {
+        [$config, $clientOptions] = $this->endpoint($provider, $apiKey, $baseUrl);
+
         $response = $this->call($provider, $model, fn () => Prism::text()
-            ->using(self::prismProvider($provider), $model, self::providerConfig($provider, $apiKey))
-            ->withClientOptions(['timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
+            ->using(self::prismProvider($provider), $model, $config)
+            ->withClientOptions([...$clientOptions, 'timeout' => self::GENERATION_TIMEOUT_SECONDS, 'connect_timeout' => self::CONNECT_TIMEOUT_SECONDS])
             ->withMaxTokens(self::CV_IMPORT_MAX_TOKENS)
             ->withSystemPrompt($instructions)
             ->withMessages([new UserMessage('Convert the attached CV.', [Document::fromRawContent($pdf, 'application/pdf', 'cv.pdf')])])
@@ -175,23 +179,33 @@ class PrismClient
             AiProvider::OpenRouter => Provider::OpenRouter,
             AiProvider::Groq => Provider::Groq,
             AiProvider::DeepSeek => Provider::DeepSeek,
-            AiProvider::OrcaRouter => Provider::OpenRouter,
+            AiProvider::OpenAICompatible => Provider::OpenRouter,
         };
     }
 
     /**
-     * The user's key, plus the address for providers reached through another one's driver. OrcaRouter speaks OpenAI
-     * chat completions with `response_format` JSON schemas, which is what Prism's OpenRouter driver sends (its OpenAI
-     * driver uses the Responses API, where OrcaRouter doesn't document structured output).
+     * The Prism config (the user's key, plus the address for an OpenAI-compatible server) and the extra client options
+     * for that address. Such servers speak OpenAI chat completions with `response_format` JSON schemas, which is what
+     * Prism's OpenRouter driver sends (its OpenAI driver uses the Responses API, which few of them implement). The
+     * user typed the address, so it must be public, and the call is pinned to the address that was checked.
      *
-     * @return array<string, string>
+     * @return array{0: array<string, string>, 1: array<string, mixed>}
+     *
+     * @throws AiProviderRejectedRequest when the address isn't a public HTTPS server
      */
-    private static function providerConfig(AiProvider $provider, string $apiKey): array
+    private function endpoint(AiProvider $provider, string $apiKey, ?string $baseUrl): array
     {
-        return match ($provider) {
-            AiProvider::OrcaRouter => ['api_key' => $apiKey, 'url' => self::ORCAROUTER_URL],
-            default => ['api_key' => $apiKey],
-        };
+        if (! $provider->needsBaseUrl()) {
+            return [['api_key' => $apiKey], []];
+        }
+
+        $address = $baseUrl === null ? null : $this->publicEndpoint->addressFor($baseUrl);
+
+        if ($baseUrl === null || $address === null) {
+            throw AiProviderRejectedRequest::baseUrlNotPublic($provider);
+        }
+
+        return [['api_key' => $apiKey, 'url' => $baseUrl], $this->publicEndpoint->pinnedClientOptions($baseUrl, $address)];
     }
 
     /** Prism reports the upstream HTTP status in different places depending on the provider and failure. */

@@ -25,6 +25,7 @@ class AiCredentialController extends Controller
                     'id' => $credential->public_id,
                     'name' => $credential->name,
                     'provider' => ['value' => $credential->provider->value, 'label' => $credential->provider->label()],
+                    'base_url' => $credential->base_url,
                     'model' => $credential->model,
                     'masked_key' => $credential->maskedKey()->display(),
                     'active' => $credential->is_default,
@@ -40,6 +41,7 @@ class AiCredentialController extends Controller
             $request->user(),
             $request->provider(),
             $request->string('api_key')->trim()->toString(),
+            $request->string('base_url')->toString() ?: null,
             $request->string('model')->trim()->toString() ?: null,
             $request->string('name')->trim()->toString() ?: null,
             $request->boolean('activate'),
@@ -52,13 +54,18 @@ class AiCredentialController extends Controller
 
     public function update(UpdateAiCredentialRequest $request, AiCredential $aiCredential): RedirectResponse
     {
-        $modelChanged = $request->string('model')->toString() !== $aiCredential->model;
+        $model = $aiCredential->model;
+        $baseUrl = $aiCredential->base_url;
 
         $aiCredential->rename($request->string('name')->toString());
         $aiCredential->changeModel($request->string('model')->toString());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => $modelChanged
-            ? __('Key saved. The model changed, so use “Test connection” to check it works.')
+        if ($aiCredential->provider->needsBaseUrl()) {
+            $aiCredential->changeBaseUrl($request->string('base_url')->toString());
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => $aiCredential->model !== $model || $aiCredential->base_url !== $baseUrl
+            ? __('Key saved. The model or address changed, so use “Test connection” to check it works.')
             : __('Key saved.')]);
 
         return to_route('ai-credentials.index');

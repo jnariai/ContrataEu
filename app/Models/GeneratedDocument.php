@@ -54,16 +54,16 @@ class GeneratedDocument extends Model
     }
 
     /**
-     * `Firstname-Lastname-Role.pdf`, plus `-Cover-Letter` (or the pt-BR suffix) for a cover letter. ASCII only, so
-     * every ATS and mail client keeps it intact. Callers eager-load `generation.application`.
+     * `Firstname-Lastname-CV.pdf`, or `Firstname-Lastname-Cover-Letter.pdf` (pt-BR: `-Carta-de-Apresentacao`): short
+     * and named after the candidate, as recruiters save them. ASCII only, so every ATS and mail client keeps it
+     * intact. `$nameOnFiles` comes from `User::nameOnFiles()`. Callers eager-load `generation`.
      */
-    public function pdfFilename(string $candidateName): string
+    public function pdfFilename(string $nameOnFiles): string
     {
-        $parts = [$candidateName, $this->generation->application->role_title];
-
-        if ($this->type === DocumentType::CoverLetter) {
-            $parts[] = $this->generation->language->coverLetterFilenameSuffix();
-        }
+        $parts = [$nameOnFiles];
+        $parts[] = $this->type === DocumentType::CoverLetter
+            ? $this->generation->language->coverLetterFilenameSuffix()
+            : 'CV';
 
         $slug = trim((string) preg_replace('/[^A-Za-z0-9]+/', '-', Str::ascii(implode(' ', $parts))), '-');
 

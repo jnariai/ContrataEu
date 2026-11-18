@@ -59,6 +59,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasOne(CandidateProfile::class);
     }
 
+    /** The name in the user's PDF file names; without a profile yet, the short form of the account name. */
+    public function nameOnFiles(): string
+    {
+        return $this->candidateProfile?->nameOnFiles() ?? CandidateProfile::shortName($this->name);
+    }
+
     /** @return HasMany<MasterDocument, $this> */
     public function masterDocuments(): HasMany
     {
