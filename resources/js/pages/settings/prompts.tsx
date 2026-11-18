@@ -1,6 +1,7 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import { ChevronDown, Lock, RotateCcw } from 'lucide-react';
 import PromptOverrideController from '@/actions/App/Http/Controllers/Settings/PromptOverrideController';
+import ConfirmDialog from '@/components/confirm-dialog';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -125,26 +126,25 @@ function PromptEditor({
                                 {t('Save my version')}
                             </Button>
                             {customized && (
-                                <Button variant="outline" asChild>
-                                    <Link
-                                        href={PromptOverrideController.destroy(
-                                            prompt.key,
-                                        )}
-                                        as="button"
-                                        preserveScroll
-                                        onBefore={() =>
-                                            confirm(
-                                                t(
-                                                    'Discard your version of “:prompt” and use the default?',
-                                                    { prompt: prompt.label },
-                                                ),
-                                            )
-                                        }
-                                    >
-                                        <RotateCcw className="size-4" />
-                                        {t('Reset to default')}
-                                    </Link>
-                                </Button>
+                                <ConfirmDialog
+                                    title={t(
+                                        'Discard your version of “:prompt” and use the default?',
+                                        { prompt: prompt.label },
+                                    )}
+                                    description={t(
+                                        'Your edits to this prompt are lost.',
+                                    )}
+                                    confirmLabel={t('Reset to default')}
+                                    action={PromptOverrideController.destroy(
+                                        prompt.key,
+                                    )}
+                                    trigger={
+                                        <Button type="button" variant="outline">
+                                            <RotateCcw className="size-4" />
+                                            {t('Reset to default')}
+                                        </Button>
+                                    }
+                                />
                             )}
                         </div>
                     </>

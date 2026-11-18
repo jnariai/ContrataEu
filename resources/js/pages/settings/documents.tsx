@@ -1,10 +1,11 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import { FileText, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import MasterCvPreviewController from '@/actions/App/Http/Controllers/Settings/MasterCvPreviewController';
 import CvImportController from '@/actions/App/Http/Controllers/Settings/CvImportController';
 import MasterDocumentController from '@/actions/App/Http/Controllers/Settings/MasterDocumentController';
 import MasterDocumentFileController from '@/actions/App/Http/Controllers/Settings/MasterDocumentFileController';
+import ConfirmDialog from '@/components/confirm-dialog';
 import CvImport from '@/components/cv-import';
 import DocumentPreview from '@/components/document-preview';
 import type { CvImportState } from '@/components/cv-import';
@@ -152,22 +153,21 @@ function DocumentEditor({
                             'Check every section against your PDF, then Save. Saving also keeps the PDF as your CV’s original file.',
                         )}
                     </p>
-                    <Button variant="outline" size="sm" asChild>
-                        <Link
-                            href={CvImportController.destroy(imported.id)}
-                            as="button"
-                            preserveScroll
-                            onBefore={() =>
-                                confirm(
-                                    t(
-                                        'Discard the imported text and keep your saved CV?',
-                                    ),
-                                )
-                            }
-                        >
-                            {t('Discard import')}
-                        </Link>
-                    </Button>
+                    <ConfirmDialog
+                        title={t(
+                            'Discard the imported text and keep your saved CV?',
+                        )}
+                        description={t(
+                            'The text read from the PDF is lost; you can import the PDF again.',
+                        )}
+                        confirmLabel={t('Discard import')}
+                        action={CvImportController.destroy(imported.id)}
+                        trigger={
+                            <Button type="button" variant="outline" size="sm">
+                                {t('Discard import')}
+                            </Button>
+                        }
+                    />
                 </div>
             )}
 
@@ -279,26 +279,27 @@ function OriginalFile({
                     <span className="text-muted-foreground">
                         {formatBytes(document.file.size_bytes, locale.htmlLang)}
                     </span>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-auto text-destructive hover:text-destructive"
-                        asChild
-                    >
-                        <Link
-                            href={MasterDocumentFileController.destroy(
-                                document.type,
-                            )}
-                            as="button"
-                            preserveScroll
-                            onBefore={() =>
-                                confirm(t('Remove the original file?'))
-                            }
-                        >
-                            <Trash2 className="size-4" />
-                            {t('Remove')}
-                        </Link>
-                    </Button>
+                    <ConfirmDialog
+                        title={t('Remove the original file?')}
+                        description={t(
+                            'The file is deleted; the text of your document stays.',
+                        )}
+                        confirmLabel={t('Remove')}
+                        action={MasterDocumentFileController.destroy(
+                            document.type,
+                        )}
+                        trigger={
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="ml-auto text-destructive hover:text-destructive"
+                            >
+                                <Trash2 className="size-4" />
+                                {t('Remove')}
+                            </Button>
+                        }
+                    />
                 </div>
             )}
 

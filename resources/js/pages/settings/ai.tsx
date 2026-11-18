@@ -11,6 +11,7 @@ import { useState } from 'react';
 import ActiveAiCredentialController from '@/actions/App/Http/Controllers/Settings/ActiveAiCredentialController';
 import AiCredentialController from '@/actions/App/Http/Controllers/Settings/AiCredentialController';
 import AiCredentialVerificationController from '@/actions/App/Http/Controllers/Settings/AiCredentialVerificationController';
+import ConfirmDialog from '@/components/confirm-dialog';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -207,30 +208,32 @@ function CredentialRow({ credential }: { credential: Credential }) {
                         {t('Edit')}
                     </Button>
                 )}
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    asChild
-                >
-                    <Link
-                        href={AiCredentialController.destroy(credential.id)}
-                        as="button"
-                        preserveScroll
-                        onBefore={() =>
-                            confirm(
-                                t('Delete the key “:key”?', {
-                                    key:
-                                        credential.name ??
-                                        credential.provider.label,
-                                }),
-                            )
-                        }
-                    >
-                        <Trash2 className="size-4" />
-                        {t('Delete')}
-                    </Link>
-                </Button>
+                <ConfirmDialog
+                    title={t('Delete the key “:key”?', {
+                        key: credential.name ?? credential.provider.label,
+                    })}
+                    description={
+                        credential.active
+                            ? t(
+                                  'This is your active key, so your most recently added other key becomes active. To use this one again, add it again.',
+                              )
+                            : t(
+                                  'It is removed from ContrataEu. To use it again, add it again.',
+                              )
+                    }
+                    confirmLabel={t('Delete key')}
+                    action={AiCredentialController.destroy(credential.id)}
+                    trigger={
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                        >
+                            <Trash2 className="size-4" />
+                            {t('Delete')}
+                        </Button>
+                    }
+                />
             </div>
         </li>
     );
@@ -462,9 +465,13 @@ function AddCredential({
                             <Input
                                 id="name"
                                 name="name"
-                                placeholder={t('e.g. Work :provider', {
-                                    provider: provider.label,
-                                })}
+                                placeholder={
+                                    provider.needsBaseUrl
+                                        ? t('e.g. OrcaRouter')
+                                        : t('e.g. Work :provider', {
+                                              provider: provider.label,
+                                          })
+                                }
                                 maxLength={60}
                             />
                             <p className="text-xs text-muted-foreground">

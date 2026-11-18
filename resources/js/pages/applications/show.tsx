@@ -2,6 +2,7 @@ import { Head, Link, router, setLayoutProps } from '@inertiajs/react';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import ApplicationController from '@/actions/App/Http/Controllers/ApplicationController';
 import ApplicationStatusController from '@/actions/App/Http/Controllers/ApplicationStatusController';
+import ConfirmDialog from '@/components/confirm-dialog';
 import ApplicationTabs from '@/components/application-tabs';
 import GenerationPanel from '@/components/generation-panel';
 import StatusBadge from '@/components/status-badge';
@@ -169,29 +170,27 @@ export default function ShowApplication({
                             </Button>
                         )}
                         {can.delete && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
-                                asChild
-                            >
-                                <Link
-                                    href={ApplicationController.destroy(
-                                        application.id,
-                                    )}
-                                    as="button"
-                                    onBefore={() =>
-                                        confirm(
-                                            t(
-                                                'Delete this application and every version generated for it? This cannot be undone.',
-                                            ),
-                                        )
-                                    }
-                                >
-                                    <Trash2 className="size-4" />
-                                    {t('Delete')}
-                                </Link>
-                            </Button>
+                            <ConfirmDialog
+                                title={t('Delete this application?')}
+                                description={t(
+                                    'Every version generated for it is deleted too. This can’t be undone.',
+                                )}
+                                confirmLabel={t('Delete application')}
+                                action={ApplicationController.destroy(
+                                    application.id,
+                                )}
+                                visitOptions={{ preserveScroll: false }}
+                                trigger={
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="size-4" />
+                                        {t('Delete')}
+                                    </Button>
+                                }
+                            />
                         )}
                     </div>
                 </header>

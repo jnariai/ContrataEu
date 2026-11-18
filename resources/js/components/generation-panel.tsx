@@ -27,6 +27,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useTrans } from '@/hooks/use-trans';
+import { notify } from '@/lib/notify';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { index as aiKeysIndex } from '@/routes/ai-credentials';
@@ -113,7 +114,7 @@ export default function GenerationPanel({
             setJustFinished(true);
 
             if (lastAttemptFailed) {
-                toast.error(t('The generation failed. Details are below.'));
+                notify('error', t('The generation failed. Details are below.'));
             } else if (generation) {
                 toast.success(
                     t('Version :version is ready.', {

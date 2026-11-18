@@ -1,8 +1,9 @@
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import type { RouteDefinition } from '@/wayfinder';
 import { Copy, Download, RotateCcw, Save } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/confirm-dialog';
 import DocumentPreview from '@/components/document-preview';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTrans } from '@/hooks/use-trans';
+import { notify } from '@/lib/notify';
 
 /**
  * Edits text the AI wrote (a document or an answer): save, copy, and revert to the generated text.
@@ -51,7 +53,8 @@ export default function GeneratedTextEditor({
             await navigator.clipboard.writeText(form.data.content);
             toast.success(t('Copied to the clipboard.'));
         } catch {
-            toast.error(
+            notify(
+                'error',
                 t('Could not copy. Select the text and copy it yourself.'),
             );
         }
@@ -152,28 +155,27 @@ export default function GeneratedTextEditor({
                         </Button>
                     ))}
                 {canEdit && edited && (
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="ml-auto"
-                        disabled={form.processing}
-                        onClick={() =>
-                            router.visit(revert, {
-                                preserveScroll: true,
-                                preserveState: true,
-                                onBefore: () =>
-                                    confirm(
-                                        t(
-                                            'Discard your edits and bring back the generated text?',
-                                        ),
-                                    ),
-                            })
+                    <ConfirmDialog
+                        title={t(
+                            'Discard your edits and bring back the generated text?',
+                        )}
+                        description={t('Your edits to this text are lost.')}
+                        confirmLabel={t('Revert')}
+                        action={revert}
+                        visitOptions={{ preserveState: true }}
+                        trigger={
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="ml-auto"
+                                disabled={form.processing}
+                            >
+                                <RotateCcw className="size-4" />
+                                {t('Revert')}
+                            </Button>
                         }
-                    >
-                        <RotateCcw className="size-4" />
-                        {t('Revert')}
-                    </Button>
+                    />
                 )}
             </div>
         </form>
