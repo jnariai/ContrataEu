@@ -94,8 +94,8 @@ it('refuses to start without a key that can read PDFs', function (?AiProvider $p
     Queue::assertNothingPushed();
 })->with([
     'no key' => [null, 'Add an AI key first (Settings → AI keys). Your AI account reads the PDF.'],
-    'Groq' => [AiProvider::Groq, 'Groq can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key your default, or paste your CV as text.'],
-    'DeepSeek' => [AiProvider::DeepSeek, 'DeepSeek can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key your default, or paste your CV as text.'],
+    'Groq' => [AiProvider::Groq, 'Groq can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key active, or paste your CV as text.'],
+    'DeepSeek' => [AiProvider::DeepSeek, 'DeepSeek can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key active, or paste your CV as text.'],
 ]);
 
 it('runs one import at a time per user', function (): void {
@@ -179,7 +179,7 @@ it('marks the import failed when the worker gives up', function (): void {
         ->and($import->fresh()->error)->toBe('Something went wrong while reading your PDF. Please try again, or paste your CV as text.');
 });
 
-it('shows the newest import and whether the default key can read PDFs', function (): void {
+it('shows the newest import and whether the active key can read PDFs', function (): void {
     $import = queuedCvImport();
     $import->succeed(IMPORTED_CV, now()->toImmutable());
 
@@ -194,7 +194,7 @@ it('shows the newest import and whether the default key can read PDFs', function
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('cvImport', null)
             ->where('canImportCv.allowed', false)
-            ->where('canImportCv.reason', 'Groq can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key your default to import one.'));
+            ->where('canImportCv.reason', 'Groq can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key active to import one.'));
 });
 
 it('saves the imported CV and keeps the PDF as its original file, replacing the old one', function (): void {

@@ -63,6 +63,15 @@ it('treats a connection failure as a provider outage', function (): void {
         ->toThrow(fn (AiProviderException $e) => expect($e->status)->toBe(503));
 });
 
+it('tells the user the model took too long, instead of reporting an outage, when the answer times out', function (): void {
+    Http::fake(fn () => throw new ConnectionException('cURL error 28: Operation timed out after 300000 milliseconds with 440 bytes received'));
+
+    expect(fn () => app(PrismClient::class)->ping(AiProvider::OpenRouter, 'openrouter/free', 'sk-or-key'))
+        ->toThrow(fn (AiProviderRejectedRequest $e) => expect($e->errorCode)->toBe('ai_provider.too_slow')
+            ->and($e->status)->toBe(504)
+            ->and($e->getMessage())->toBe('OpenRouter took too long to answer with “openrouter/free”, so the attempt was stopped. Try again, or change the key’s model in AI keys to a faster one; free and very large models are often slow.'));
+});
+
 /** A minimal OpenAI Responses API reply with one text output. */
 function openAiReply(string $text = 'OK'): array
 {
@@ -148,6 +157,28 @@ it('asks DeepSeek for JSON within its 8K output limit and reads the package back
     Http::assertSent(fn (Request $request): bool => $request['response_format'] === ['type' => 'json_object']
         && $request['max_tokens'] === 8192
         && $request['max_completion_tokens'] === 8192);
+});
+
+it('sends OrcaRouter calls to its OpenAI-compatible chat completions with the user’s key', function (): void {
+    Http::fake(['api.orcarouter.ai/*' => Http::response(deepSeekReply())]);
+
+    app(PrismClient::class)->ping(AiProvider::OrcaRouter, 'openai/gpt-5', 'sk-orca-user-key');
+
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.orcarouter.ai/v1/chat/completions'
+        && $request->header('Authorization') === ['Bearer sk-orca-user-key']
+        && $request['model'] === 'openai/gpt-5');
+});
+
+it('asks OrcaRouter for the package as a JSON schema response and reads it back', function (): void {
+    Http::fake(['api.orcarouter.ai/*' => Http::response(deepSeekReply(json_encode(generationAnswer(), JSON_THROW_ON_ERROR)))]);
+    $prompt = app(BuildGenerationPrompt::class)->handle(promptContext());
+
+    $output = app(PrismClient::class)->generate(AiProvider::OrcaRouter, 'openai/gpt-5', 'sk-orca', $prompt);
+
+    expect($output->cvMarkdown)->toBe(trim(generationAnswer()['cv_markdown']));
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.orcarouter.ai/v1/chat/completions'
+        && $request['response_format']['type'] === 'json_schema'
+        && $request['max_tokens'] === 16000);
 });
 
 it('keeps the larger output limit for the other providers', function (): void {

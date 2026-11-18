@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\Settings\ActiveAiCredentialController;
 use App\Http\Controllers\Settings\AiCredentialController;
 use App\Http\Controllers\Settings\AiCredentialVerificationController;
 use App\Http\Controllers\Settings\CandidateProfileController;
 use App\Http\Controllers\Settings\CvImportController;
-use App\Http\Controllers\Settings\DefaultAiCredentialController;
 use App\Http\Controllers\Settings\MasterCvPreviewController;
 use App\Http\Controllers\Settings\MasterDocumentController;
 use App\Http\Controllers\Settings\MasterDocumentFileController;
@@ -63,9 +63,9 @@ Route::middleware(['auth', 'verified', 'throttle:writes'])->group(function () {
     Route::post('settings/ai/{aiCredential}/verification', [AiCredentialVerificationController::class, 'store'])
         ->middleware(['can:update,aiCredential', 'throttle:10,1'])
         ->name('ai-credential-verifications.store');
-    Route::post('settings/ai/{aiCredential}/default', [DefaultAiCredentialController::class, 'store'])
+    Route::post('settings/ai/{aiCredential}/active', [ActiveAiCredentialController::class, 'store'])
         ->middleware('can:update,aiCredential')
-        ->name('default-ai-credentials.store');
+        ->name('active-ai-credentials.store');
 
     Route::get('settings/prompts', [PromptOverrideController::class, 'index'])->name('prompt-overrides.index');
     Route::put('settings/prompts/{key}', [PromptOverrideController::class, 'update'])->name('prompt-overrides.update');

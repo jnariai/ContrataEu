@@ -33,17 +33,17 @@ class GenerationFactory extends Factory
 
     public function queued(): static
     {
-        return $this->state(['status' => GenerationStatus::Queued, 'started_at' => null, 'finished_at' => null, 'input_tokens' => null, 'output_tokens' => null]);
+        return $this->state(['version' => null, 'status' => GenerationStatus::Queued, 'started_at' => null, 'finished_at' => null, 'input_tokens' => null, 'output_tokens' => null]);
     }
 
     public function running(): static
     {
-        return $this->state(['status' => GenerationStatus::Running, 'started_at' => now(), 'finished_at' => null, 'input_tokens' => null, 'output_tokens' => null]);
+        return $this->state(['version' => null, 'status' => GenerationStatus::Running, 'started_at' => now(), 'finished_at' => null, 'input_tokens' => null, 'output_tokens' => null]);
     }
 
     public function failed(): static
     {
-        return $this->state(['status' => GenerationStatus::Failed, 'error' => 'The AI provider rejected the request.', 'input_tokens' => null, 'output_tokens' => null]);
+        return $this->state(['version' => null, 'status' => GenerationStatus::Failed, 'error' => 'The AI provider rejected the request.', 'input_tokens' => null, 'output_tokens' => null]);
     }
 
     public function version(int $version): static

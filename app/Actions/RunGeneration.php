@@ -50,20 +50,15 @@ class RunGeneration
             $this->persistOutput->handle($generation, $output, $questions);
         } catch (BusinessRuleException $exception) {
             $generation->fail($exception->getMessage(), now()->toImmutable());
-
-            return;
         } catch (GatewayException $exception) {
             report($exception);
             $generation->fail(GatewayException::userMessage(), now()->toImmutable());
-
-            return;
         } catch (Throwable $exception) {
             report($exception);
             $generation->fail(self::unexpectedFailureMessage(), now()->toImmutable());
-
-            return;
         }
 
+        // After a success or a failure alike: keeps 3 versions and the last 3 failures.
         $this->pruneGenerations->handle($application);
     }
 

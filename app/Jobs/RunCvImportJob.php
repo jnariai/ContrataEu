@@ -22,8 +22,8 @@ class RunCvImportJob implements ShouldQueue
 
     public int $tries = 1;
 
-    /** Above the AI client's own 120 s timeout, below the queue's retry_after. */
-    public int $timeout = 150;
+    /** Above the AI client's own 300 s timeout, below the queue's retry_after. */
+    public int $timeout = 330;
 
     public bool $failOnTimeout = true;
 

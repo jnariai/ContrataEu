@@ -6,6 +6,7 @@ use App\Actions\CreateApplication;
 use App\Actions\DeleteApplication;
 use App\Actions\UpdateApplication;
 use App\Enums\ApplicationStatus;
+use App\Enums\GenerationStatus;
 use App\Enums\Language;
 use App\Enums\WorkMode;
 use App\Http\Requests\StoreApplicationRequest;
@@ -14,6 +15,7 @@ use App\Http\Requests\UpdateGeneratedAnswerRequest;
 use App\Http\Requests\UpdateGeneratedDocumentRequest;
 use App\Http\Resources\ApplicationResource;
 use App\Http\Resources\GenerationResource;
+use App\Models\AiCredential;
 use App\Models\Application;
 use App\Models\Generation;
 use Illuminate\Http\RedirectResponse;
@@ -41,17 +43,21 @@ class ApplicationController extends Controller
     }
 
     /**
-     * Shows one version: `?version=N` when it exists, else the current one (the last that succeeded), else the latest.
-     * `versions` lists every kept version, so the page can show progress or a failure of a newer run.
+     * Shows one version: `?version=N` when it exists, else the current one, else the newest. Only successful runs
+     * are versions; the run in progress (for its steps) and the last failures (the failure log) come separately.
      */
     public function show(Request $request, Application $application): Response
     {
-        $versions = $application->generations()->orderByDesc('version')->get();
-        $latest = $versions->first();
+        $runs = $application->generations()->orderByDesc('id')->get();
+        $versions = $runs->filter(fn (Generation $generation): bool => $generation->status === GenerationStatus::Succeeded)
+            ->sortByDesc('version')->values();
+        $running = $runs->first(fn (Generation $generation): bool => ! $generation->isFinished());
+        $failures = $runs->filter(fn (Generation $generation): bool => $generation->status === GenerationStatus::Failed)->values();
+        $newestFinished = $runs->first(fn (Generation $generation): bool => $generation->isFinished());
 
         $selected = $versions->firstWhere('version', $request->integer('version'))
             ?? $versions->firstWhere('id', $application->current_generation_id)
-            ?? $latest;
+            ?? $versions->first();
         $selected?->load(['documents', 'answers.screeningQuestion']);
 
         return Inertia::render('applications/show', [
@@ -59,12 +65,38 @@ class ApplicationController extends Controller
             'generation' => $selected === null ? null : GenerationResource::make($selected)->resolve(),
             'versions' => $versions->map(fn (Generation $generation): array => [
                 'version' => $generation->version,
-                'status' => ['value' => $generation->status->value, 'label' => $generation->status->label(), 'finished' => $generation->isFinished()],
                 'language' => ['value' => $generation->language->value, 'label' => $generation->language->label()],
-                'error' => $generation->error,
                 'finished_at' => $generation->finished_at?->toIso8601ZuluString(),
                 'current' => $generation->id === $application->current_generation_id,
             ])->values(),
+            'run' => $running === null ? null : [
+                'status' => ['value' => $running->status->value, 'label' => $running->status->label()],
+                'provider' => $running->provider->label(),
+                'model' => $running->model,
+                'queued_at' => $running->created_at->toIso8601ZuluString(),
+                'started_at' => $running->started_at?->toIso8601ZuluString(),
+            ],
+            'failures' => $failures->map(fn (Generation $generation): array => [
+                'id' => $generation->public_id,
+                'provider' => $generation->provider->label(),
+                'model' => $generation->model,
+                'language' => ['value' => $generation->language->value, 'label' => $generation->language->label()],
+                'error' => $generation->error,
+                'queued_at' => $generation->created_at->toIso8601ZuluString(),
+                'started_at' => $generation->started_at?->toIso8601ZuluString(),
+                'finished_at' => $generation->finished_at?->toIso8601ZuluString(),
+            ])->values(),
+            // The newest finished run failed: say so above the documents (which are still the last good version).
+            'lastAttemptFailed' => $newestFinished?->status === GenerationStatus::Failed,
+            // The user's keys, for the "Using" switcher next to Generate; never the key itself.
+            'aiKeys' => $request->user()->aiCredentials()->orderByDesc('is_default')->latest('id')->get()
+                ->map(fn (AiCredential $credential): array => [
+                    'id' => $credential->public_id,
+                    'name' => $credential->displayName(),
+                    'provider' => $credential->provider->label(),
+                    'model' => $credential->model,
+                    'active' => $credential->is_default,
+                ])->values(),
             'statuses' => ApplicationStatus::options(),
             'limits' => [
                 'document' => UpdateGeneratedDocumentRequest::MAX_CHARACTERS,
@@ -74,7 +106,7 @@ class ApplicationController extends Controller
                 'update' => $request->user()->can('update', $application),
                 'delete' => $request->user()->can('delete', $application),
                 // Permission plus state: nothing may be queued or running for this application.
-                'generate' => $request->user()->can('generate', $application) && ($latest === null || $latest->isFinished()),
+                'generate' => $request->user()->can('generate', $application) && $running === null,
             ],
         ]);
     }

@@ -6,6 +6,7 @@ use App\Enums\FilePurpose;
 use App\Models\GeneratedDocument;
 use App\ValueObjects\StoragePath;
 use InvalidArgumentException;
+use LogicException;
 
 /**
  * A short-lived download URL for a document's PDF. The PDF is rendered once and kept in the bucket; editing or
@@ -33,7 +34,7 @@ class GetDocumentPdfUrl
             $application->user,
             $document,
             FilePurpose::DocumentPdf,
-            StoragePath::forDocumentPdf($application->user_id, $application->id, $document->generation->version, $document->type),
+            StoragePath::forDocumentPdf($application->user_id, $application->id, $document->generation->version ?? throw new LogicException('Only a successful generation has documents.'), $document->type),
             $this->renderDocumentPdf->handle($document),
             $filename,
         );

@@ -5,7 +5,7 @@ namespace App\Actions;
 use App\Models\AiCredential;
 use Illuminate\Database\DatabaseManager;
 
-/** Deleting the default key hands the default to the most recently added remaining key. */
+/** Deleting the active key makes the most recently added remaining key active. */
 class DeleteAiCredential
 {
     public function __construct(private DatabaseManager $db) {}

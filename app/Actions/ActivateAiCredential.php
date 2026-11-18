@@ -5,8 +5,8 @@ namespace App\Actions;
 use App\Models\AiCredential;
 use Illuminate\Database\DatabaseManager;
 
-/** Generations use the default key. Exactly one key per user is the default. */
-class MakeAiCredentialDefault
+/** Generations and CV imports use the active key. Exactly one key per user is active. */
+class ActivateAiCredential
 {
     public function __construct(private DatabaseManager $db) {}
 

@@ -192,10 +192,35 @@ it('marks the generation failed when the job dies mid-run', function (): void {
         ->and($generation->fresh()->error)->not->toContain('Worker timed out');
 });
 
+it('numbers a run only when it succeeds, after the highest version', function (): void {
+    $generation = queuedGeneration();
+    $application = $generation->application;
+    Generation::factory()->for($application)->version(1)->create();
+    Generation::factory()->for($application)->failed()->create();
+    Prism::fake([fakeGenerationResponse(generationAnswer())]);
+
+    expect($generation->version)->toBeNull();
+
+    app(RunGeneration::class)->handle($generation);
+
+    expect($generation->fresh()->version)->toBe(2)
+        ->and($application->fresh()->current_generation_id)->toBe($generation->id);
+});
+
+it('leaves a failed run without a version number', function (): void {
+    $generation = queuedGeneration();
+    Generation::factory()->for($generation->application)->version(1)->create();
+    Prism::fake([fakeGenerationResponse(['report' => 'not a report'])]);
+
+    app(RunGeneration::class)->handle($generation);
+
+    expect($generation->fresh()->status)->toBe(GenerationStatus::Failed)
+        ->and($generation->fresh()->version)->toBeNull();
+});
+
 it('keeps the 3 newest versions and deletes older ones with their PDFs', function (): void {
     $generation = queuedGeneration();
     $application = $generation->application;
-    $generation->update(['version' => 4]);
     $old = collect([1, 2, 3])->map(fn (int $version) => Generation::factory()->for($application)->version($version)->create());
     $oldCv = GeneratedDocument::factory()->for($old[0])->create(['type' => DocumentType::Cv]);
     $oldPdf = StoredFile::factory()->forGeneratedDocument($oldCv, $application->user)->create();
@@ -209,16 +234,36 @@ it('keeps the 3 newest versions and deletes older ones with their PDFs', functio
     Storage::disk('r2')->assertMissing($oldPdf->path);
 });
 
-it('never prunes the version the application shows, or one still running', function (): void {
+it('keeps the last 3 failures without pushing out any version', function (): void {
+    $setup = queuedGeneration();
+    $application = $setup->application;
+    $setup->delete();
+    $versions = collect([1, 2, 3])->map(fn (int $version) => Generation::factory()->for($application)->version($version)->create());
+    $application->adoptGeneration($versions[2]);
+    $oldFailures = collect(range(1, 3))->map(fn () => Generation::factory()->for($application)->failed()->create());
+    // The new run comes after the earlier ones, as it does in the app.
+    $generation = Generation::factory()->for($application)->queued()->create(['provider' => AiProvider::Anthropic, 'model' => 'claude-sonnet-5-5']);
+    Prism::fake([fakeGenerationResponse(['report' => 'not a report'])]);
+
+    app(RunGeneration::class)->handle($generation);
+
+    $failures = $application->generations()->inStatus(GenerationStatus::Failed)->orderBy('id')->pluck('id')->all();
+    expect($application->generations()->whereNotNull('version')->orderBy('version')->pluck('version')->all())->toBe([1, 2, 3])
+        ->and($failures)->toBe([$oldFailures[1]->id, $oldFailures[2]->id, $generation->id]);
+});
+
+it('never prunes the version the application shows, or a run in progress', function (): void {
     $application = Application::factory()->create();
     $current = Generation::factory()->for($application)->version(1)->create();
     $application->adoptGeneration($current);
-    Generation::factory()->for($application)->version(2)->running()->create();
-    foreach ([3, 4, 5] as $version) {
-        Generation::factory()->for($application)->version($version)->failed()->create();
+    foreach ([2, 3, 4] as $version) {
+        Generation::factory()->for($application)->version($version)->create();
     }
+    $running = Generation::factory()->for($application)->running()->create();
 
     app(PruneGenerations::class)->handle($application);
 
-    expect($application->generations()->orderBy('version')->pluck('version')->all())->toBe([1, 2, 3, 4, 5]);
+    expect($application->generations()->pluck('id')->sort()->values()->all())
+        ->toContain($current->id, $running->id)
+        ->and($application->generations()->whereNotNull('version')->orderBy('version')->pluck('version')->all())->toBe([1, 2, 3, 4]);
 });

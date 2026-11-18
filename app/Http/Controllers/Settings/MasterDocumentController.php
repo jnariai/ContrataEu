@@ -62,14 +62,14 @@ class MasterDocumentController extends Controller
         ];
     }
 
-    /** @return array{allowed: bool, reason: string|null} whether the default key can read a PDF, and why not */
+    /** @return array{allowed: bool, reason: string|null} whether the active key can read a PDF, and why not */
     private function canImportCv(Request $request): array
     {
         $credential = $request->user()->aiCredentials()->where('is_default', true)->first();
 
         return match (true) {
             $credential === null => ['allowed' => false, 'reason' => __('Add an AI key first: your AI account reads the PDF.')],
-            ! $credential->provider->readsPdf() => ['allowed' => false, 'reason' => __(':provider can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key your default to import one.', ['provider' => $credential->provider->label()])],
+            ! $credential->provider->readsPdf() => ['allowed' => false, 'reason' => __(':provider can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key active to import one.', ['provider' => $credential->provider->label()])],
             default => ['allowed' => true, 'reason' => null],
         };
     }

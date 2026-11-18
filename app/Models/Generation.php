@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $public_id
  * @property int $application_id
- * @property int $version
+ * @property int|null $version set only when the run succeeds; failed and unfinished runs have none
  * @property int $status_id
  * @property GenerationStatus $status
  * @property int $provider_id
@@ -60,13 +60,12 @@ class Generation extends Model
     public const string PUBLIC_ID_PREFIX = 'gen_';
 
     /**
-     * A new run waiting for the queue. Provider, model and language are copied now, so later changes to the key or
-     * the application never rewrite what this version was made with.
+     * A new run waiting for the queue, without a version number: it gets one only if it succeeds. Provider, model
+     * and language are copied now, so later changes to the key or the application never rewrite what it used.
      */
-    public static function queue(Application $application, int $version, AiProvider $provider, string $model, Language $language): self
+    public static function queue(Application $application, AiProvider $provider, string $model, Language $language): self
     {
         $generation = new self([
-            'version' => $version,
             'status' => GenerationStatus::Queued,
             'provider' => $provider,
             'model' => $model,
@@ -98,9 +97,11 @@ class Generation extends Model
         return $claimed;
     }
 
-    public function succeed(GenerationReport $report, int $inputTokens, int $outputTokens, CarbonImmutable $at): void
+    /** Only a successful run becomes a numbered version; the caller picks the number under a lock. */
+    public function succeed(int $version, GenerationReport $report, int $inputTokens, int $outputTokens, CarbonImmutable $at): void
     {
         $this->update([
+            'version' => $version,
             'status' => GenerationStatus::Succeeded,
             'report' => $report,
             'input_tokens' => $inputTokens,
@@ -127,6 +128,16 @@ class Generation extends Model
     public function isFinished(): bool
     {
         return $this->status->isFinished();
+    }
+
+    /** @param Builder<self> $query */
+    #[Scope]
+    protected function inStatus(Builder $query, GenerationStatus ...$statuses): void
+    {
+        $query->whereIn('status_id', array_map(
+            static fn (GenerationStatus $status): int => LookupCast::idOf('generation_statuses', $status),
+            $statuses,
+        ));
     }
 
     /** @param Builder<self> $query */

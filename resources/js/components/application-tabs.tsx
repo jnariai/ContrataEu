@@ -67,7 +67,10 @@ export default function ApplicationTabs({
         : tabs[0].value;
 
     return (
-        <section className="space-y-6 rounded-xl border p-4 sm:p-6">
+        <section
+            id="documents"
+            className="scroll-mt-20 space-y-6 rounded-xl border p-4 sm:p-6"
+        >
             {result && <ReviewBanner generation={result} />}
 
             <TabList
@@ -215,7 +218,7 @@ function ReviewBanner({ generation }: { generation: Generation }) {
                     <div className="space-y-1">
                         <p className="font-medium">
                             {t(
-                                'Fill in these placeholders before you send this:',
+                                'Before you send it, fill in these placeholders:',
                             )}
                         </p>
                         <ul className="list-disc pl-5 break-words">
@@ -229,7 +232,7 @@ function ReviewBanner({ generation }: { generation: Generation }) {
                     <div className="space-y-1">
                         <p className="font-medium">
                             {t(
-                                'The CV may not parse well in applicant tracking systems:',
+                                'Worth fixing so applicant tracking systems read the CV well:',
                             )}
                         </p>
                         <ul className="list-disc pl-5 break-words">

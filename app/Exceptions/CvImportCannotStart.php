@@ -19,7 +19,7 @@ class CvImportCannotStart extends BusinessRuleException
     public static function unsupportedProvider(AiProvider $provider): self
     {
         return new self(
-            message: __(':provider can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key your default, or paste your CV as text.', ['provider' => $provider->label()]),
+            message: __(':provider can’t read PDFs. Make an Anthropic, OpenAI, Gemini or OpenRouter key active, or paste your CV as text.', ['provider' => $provider->label()]),
             errorCode: 'cv_import.unsupported_provider',
             status: Response::HTTP_UNPROCESSABLE_ENTITY,
         );

@@ -9,12 +9,12 @@ use Inertia\Inertia;
 
 class GenerationController extends Controller
 {
-    /** "Generate": queues a new version; the show page polls until it finishes. */
+    /** "Generate": queues a new run; the show page polls until it finishes. */
     public function store(Application $application, StartGeneration $startGeneration): RedirectResponse
     {
-        $generation = $startGeneration->handle($application);
+        $startGeneration->handle($application);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Generating version :version. This usually takes under a minute.', ['version' => $generation->version])]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Generating your documents. This usually takes a minute or two; you can follow it below.')]);
 
         return to_route('applications.show', $application);
     }

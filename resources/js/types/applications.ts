@@ -78,14 +78,42 @@ export type GenerationStatus = {
     finished: boolean;
 };
 
-/** One kept version in the switcher. */
+/** One kept, successful version in the switcher. */
 export type GenerationVersion = {
     version: number;
-    status: GenerationStatus;
     language: { value: LanguageValue; label: string };
-    error: string | null;
     finished_at: string | null;
     current: boolean;
+};
+
+/** The run in progress (queued or running); it gets a version number only if it succeeds. */
+export type GenerationRun = {
+    status: { value: 'queued' | 'running'; label: string };
+    provider: string;
+    model: string;
+    queued_at: string;
+    started_at: string | null;
+};
+
+/** One entry of the application's failure log (the last 3 failed runs). */
+export type GenerationFailure = {
+    id: string;
+    provider: string;
+    model: string;
+    language: { value: LanguageValue; label: string };
+    error: string | null;
+    queued_at: string;
+    started_at: string | null;
+    finished_at: string | null;
+};
+
+/** One of the user's AI keys, for the "Using" switcher next to Generate. */
+export type AiKeyOption = {
+    id: string;
+    name: string;
+    provider: string;
+    model: string;
+    active: boolean;
 };
 
 export type Generation = {

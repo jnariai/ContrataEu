@@ -16,6 +16,8 @@ class StoreAiCredentialRequest extends FormRequest
             'provider' => ['required', Rule::enum(AiProvider::class)],
             'api_key' => ['required', 'string', 'min:10', 'max:500', 'regex:/^\S+$/'],
             'model' => ['nullable', 'string', 'max:200', 'regex:/^[\w.:\/@-]+$/'],
+            'name' => ['nullable', 'string', 'max:60'],
+            'activate' => ['sometimes', 'boolean'],
         ];
     }
 

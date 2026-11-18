@@ -27,7 +27,7 @@ function readyApplication(array $attributes = []): Application
 
 beforeEach(fn () => Queue::fake());
 
-it('queues the next version with a snapshot of the key provider, model and language', function (): void {
+it('queues an unnumbered run with a snapshot of the key provider, model and language', function (): void {
     $application = readyApplication(['language' => Language::PtBr]);
     Generation::factory()->for($application)->version(4)->create();
 
@@ -36,8 +36,8 @@ it('queues the next version with a snapshot of the key provider, model and langu
         ->assertRedirect(route('applications.show', $application))
         ->assertInertiaFlash('toast.type', 'success');
 
-    $generation = $application->generations()->latest('version')->first();
-    expect($generation->version)->toBe(5)
+    $generation = $application->generations()->latest('id')->first();
+    expect($generation->version)->toBeNull()
         ->and($generation->status)->toBe(GenerationStatus::Queued)
         ->and($generation->provider)->toBe(AiProvider::Groq)
         ->and($generation->model)->toBe('llama-3.3-70b-versatile')
@@ -89,7 +89,7 @@ it('allows at most 10 generations per hour per user', function (): void {
         ->toThrow(fn (GenerationCannotStart $e) => expect($e->errorCode)->toBe('generation.rate_limited'));
 
     $this->travel(61)->minutes();
-    expect($start->handle($application)->version)->toBe(11);
+    expect($start->handle($application)->status)->toBe(GenerationStatus::Queued);
 });
 
 it('requires a verified email', function (): void {

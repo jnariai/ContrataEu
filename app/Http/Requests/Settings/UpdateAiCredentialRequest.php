@@ -5,7 +5,7 @@ namespace App\Http\Requests\Settings;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-/** Changing the model of a saved key; the key itself can't be changed (add a new one instead). */
+/** Renaming a saved key or changing its model; the key itself can't be changed (add a new one instead). */
 class UpdateAiCredentialRequest extends FormRequest
 {
     /** @return array<string, ValidationRule|array<mixed>|string> */
@@ -13,6 +13,7 @@ class UpdateAiCredentialRequest extends FormRequest
     {
         return [
             'model' => ['required', 'string', 'max:200', 'regex:/^[\w.:\/@-]+$/'],
+            'name' => ['nullable', 'string', 'max:60'],
         ];
     }
 

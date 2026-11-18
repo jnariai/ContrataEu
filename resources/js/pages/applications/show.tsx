@@ -22,14 +22,21 @@ import { show } from '@/routes/applications';
 import type {
     Application,
     Generation,
+    GenerationFailure,
+    GenerationRun,
     GenerationVersion,
     StatusOption,
+    AiKeyOption,
 } from '@/types';
 
 type Props = {
     application: Application;
     generation: Generation | null;
     versions: GenerationVersion[];
+    run: GenerationRun | null;
+    failures: GenerationFailure[];
+    lastAttemptFailed: boolean;
+    aiKeys: AiKeyOption[];
     statuses: StatusOption[];
     limits: { document: number; answer: number };
     can: { update: boolean; delete: boolean; generate: boolean };
@@ -39,6 +46,10 @@ export default function ShowApplication({
     application,
     generation,
     versions,
+    run,
+    failures,
+    lastAttemptFailed,
+    aiKeys,
     statuses,
     limits,
     can,
@@ -189,6 +200,10 @@ export default function ShowApplication({
                     applicationId={application.id}
                     generation={generation}
                     versions={versions}
+                    run={run}
+                    failures={failures}
+                    lastAttemptFailed={lastAttemptFailed}
+                    aiKeys={aiKeys}
                     canGenerate={can.generate}
                 />
 

@@ -19,13 +19,15 @@ class AiCredentialController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('settings/ai', [
-            'credentials' => $request->user()->aiCredentials()->latest('id')->get()
+            // The active key first, then the newest.
+            'credentials' => $request->user()->aiCredentials()->orderByDesc('is_default')->latest('id')->get()
                 ->map(fn (AiCredential $credential): array => [
                     'id' => $credential->public_id,
+                    'name' => $credential->name,
                     'provider' => ['value' => $credential->provider->value, 'label' => $credential->provider->label()],
                     'model' => $credential->model,
                     'masked_key' => $credential->maskedKey()->display(),
-                    'is_default' => $credential->is_default,
+                    'active' => $credential->is_default,
                     'last_verified_at' => $credential->last_verified_at?->toIso8601ZuluString(),
                 ])->values(),
             'providers' => AiProvider::options(),
@@ -39,6 +41,8 @@ class AiCredentialController extends Controller
             $request->provider(),
             $request->string('api_key')->trim()->toString(),
             $request->string('model')->trim()->toString() ?: null,
+            $request->string('name')->trim()->toString() ?: null,
+            $request->boolean('activate'),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('API key saved. Use “Test connection” to check it works.')]);
@@ -48,9 +52,14 @@ class AiCredentialController extends Controller
 
     public function update(UpdateAiCredentialRequest $request, AiCredential $aiCredential): RedirectResponse
     {
+        $modelChanged = $request->string('model')->toString() !== $aiCredential->model;
+
+        $aiCredential->rename($request->string('name')->toString());
         $aiCredential->changeModel($request->string('model')->toString());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Model changed. Use “Test connection” to check it works.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => $modelChanged
+            ? __('Key saved. The model changed, so use “Test connection” to check it works.')
+            : __('Key saved.')]);
 
         return to_route('ai-credentials.index');
     }

@@ -48,6 +48,18 @@ class AiProviderRejectedRequest extends BusinessRuleException
         );
     }
 
+    /**
+     * The model was still answering when the time limit ran out: a slow model (free and very large ones often are),
+     * not an outage. Trying again or picking a faster model fixes it.
+     */
+    public static function tooSlow(AiProvider $provider, string $model, ?Throwable $previous = null): self
+    {
+        return self::make(
+            __(':provider took too long to answer with “:model”, so the attempt was stopped. Try again, or change the key’s model in AI keys to a faster one; free and very large models are often slow.', ['provider' => $provider->label(), 'model' => $model]),
+            'ai_provider.too_slow', Response::HTTP_GATEWAY_TIMEOUT, $provider, null, $previous, ['model' => $model],
+        );
+    }
+
     /** @param array<string, mixed> $logContext */
     private static function make(string $message, string $errorCode, int $status, AiProvider $provider, ?string $details, ?Throwable $previous, array $logContext = []): self
     {

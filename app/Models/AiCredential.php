@@ -16,12 +16,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * The user's own AI provider key (BYOK). The key is encrypted at rest; only `key_hint` (last 4 chars) is ever shown.
+ * A user can keep many keys; exactly one is active (`is_default`), and generations and CV imports use that one.
  *
  * @property int $id
  * @property string $public_id
  * @property int $user_id
  * @property int $provider_id
  * @property AiProvider $provider
+ * @property string|null $name optional, so several keys for the same provider can be told apart
  * @property string $api_key
  * @property string $key_hint
  * @property string $model
@@ -31,7 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $updated_at
  * @property-read User $user
  */
-#[Fillable(['provider', 'api_key', 'key_hint', 'model', 'is_default', 'last_verified_at'])]
+#[Fillable(['provider', 'name', 'api_key', 'key_hint', 'model', 'is_default', 'last_verified_at'])]
 #[Hidden(['api_key'])]
 class AiCredential extends Model
 {
@@ -42,10 +44,11 @@ class AiCredential extends Model
 
     public const string PUBLIC_ID_PREFIX = 'key_';
 
-    public static function add(User $user, AiProvider $provider, string $apiKey, string $model, bool $isDefault): self
+    public static function add(User $user, AiProvider $provider, string $apiKey, string $model, ?string $name, bool $isDefault): self
     {
         $credential = new self([
             'provider' => $provider,
+            'name' => self::cleanName($name),
             'api_key' => trim($apiKey),
             'key_hint' => MaskedApiKey::fromPlain($apiKey)->hint,
             'model' => trim($model),
@@ -72,6 +75,24 @@ class AiCredential extends Model
         }
 
         $this->update(['model' => $model, 'last_verified_at' => null]);
+    }
+
+    public function rename(?string $name): void
+    {
+        $this->update(['name' => self::cleanName($name)]);
+    }
+
+    /** The key's name, or its provider when it has none: how the key is shown in lists and switchers. */
+    public function displayName(): string
+    {
+        return $this->name ?? $this->provider->label();
+    }
+
+    private static function cleanName(?string $name): ?string
+    {
+        $name = trim((string) $name);
+
+        return $name === '' ? null : $name;
     }
 
     public function markVerified(CarbonImmutable $at): void

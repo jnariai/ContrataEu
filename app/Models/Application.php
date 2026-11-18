@@ -138,7 +138,10 @@ class Application extends Model
         $this->save();
     }
 
-    /** The next version number: versions keep counting up even after old ones are pruned. */
+    /**
+     * The number the next successful run gets. Failed runs never take one, so v1, v2… are always usable documents;
+     * numbers keep counting up after old versions are pruned (the highest is never pruned).
+     */
     public function nextGenerationVersion(): int
     {
         return ((int) $this->generations()->max('version')) + 1;

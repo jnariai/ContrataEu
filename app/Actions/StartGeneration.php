@@ -15,7 +15,8 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
- * "Generate": checks the setup, queues a new version of the application's documents and dispatches the job.
+ * "Generate": checks the setup, queues a new run for the application's documents and dispatches the job. The run
+ * becomes a numbered version only if it succeeds.
  * The AI call itself happens in the queue (RunGeneration), never in the request.
  */
 class StartGeneration
@@ -69,7 +70,6 @@ class StartGeneration
 
                 return Generation::queue(
                     $application,
-                    $application->nextGenerationVersion(),
                     $credential->provider,
                     $credential->model,
                     $application->language,

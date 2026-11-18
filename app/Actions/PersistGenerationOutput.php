@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Datas\GenerationOutput;
 use App\Enums\DocumentType;
+use App\Models\Application;
 use App\Models\GeneratedAnswer;
 use App\Models\GeneratedDocument;
 use App\Models\Generation;
@@ -12,7 +13,7 @@ use Illuminate\Database\DatabaseManager;
 
 /**
  * Saves one run's result in a single transaction: the report, the documents, the answers, and the application now
- * showing this version. Either everything is saved or nothing is, so a failed run never leaves half a package.
+ * showing this version, which only now gets its number. Either everything is saved or nothing is, so a failed run never leaves half a package.
  */
 class PersistGenerationOutput
 {
@@ -22,6 +23,9 @@ class PersistGenerationOutput
     public function handle(Generation $generation, GenerationOutput $output, array $questions): void
     {
         $this->db->transaction(function () use ($generation, $output, $questions): void {
+            // Lock the application so the version number is taken once, even if two runs finished together.
+            $application = Application::query()->whereKey($generation->application_id)->lockForUpdate()->firstOrFail();
+
             GeneratedDocument::write($generation, DocumentType::Cv, $output->cvMarkdown);
 
             if ($output->coverLetter !== null) {
@@ -40,8 +44,9 @@ class PersistGenerationOutput
                 }
             }
 
-            $generation->succeed($output->report, $output->inputTokens, $output->outputTokens, now()->toImmutable());
-            $generation->application->adoptGeneration($generation);
+            $generation->succeed($application->nextGenerationVersion(), $output->report, $output->inputTokens, $output->outputTokens, now()->toImmutable());
+            $application->adoptGeneration($generation);
+            $generation->setRelation('application', $application);
         });
     }
 }
