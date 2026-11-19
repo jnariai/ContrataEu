@@ -69,8 +69,13 @@ export default defineConfig({
         semi: true,
         singleAttributePerLine: false,
         htmlWhitespaceSensitivity: 'css',
+        // Code only: prose (Markdown, including the AI prompts, whose wording and layout are input to the model)
+        // and design or agent tooling files are left as written.
         ignorePatterns: [
             '.github/**',
+            '.ai/**',
+            '.impeccable/**',
+            '**/*.md',
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
