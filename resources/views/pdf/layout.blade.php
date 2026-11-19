@@ -1,5 +1,5 @@
 {{--
-    Shared PDF shell (see docs/defaults/cv-output-format.md): one column, Inter, accent #1F3A5F on section headings
+    Shared PDF shell for the CV structure in resources/prompts/app/cv-source-structure.md: one column, Inter, accent #1F3A5F on section headings
     and dividers, grey meta lines. Headings keep their source case (no text-transform), so the extracted text matches. Nothing in page headers or footers, no tables, images or icons. Self-contained:
     fonts are inlined and nothing is fetched, so Cloudflare and dompdf render the same document.
 --}}

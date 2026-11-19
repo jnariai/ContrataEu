@@ -227,7 +227,7 @@ function promptContext(array $overrides = []): PromptContext
     ]);
 }
 
-/** The example CV from docs/defaults/cv-output-format.md, filled in. */
+/** A complete CV in the source structure the app asks the AI for (resources/prompts/app/cv-source-structure.md). */
 const EXAMPLE_CV = <<<'MD'
 # Jane Doe
 Lisbon, Portugal · jane@example.com · [linkedin.com/in/janedoe](https://linkedin.com/in/janedoe)

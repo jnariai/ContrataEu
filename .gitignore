@@ -43,3 +43,6 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+
+# Local development notes (product spec, drafts); not part of the application
+/docs
