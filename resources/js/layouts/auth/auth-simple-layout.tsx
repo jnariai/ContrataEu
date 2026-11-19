@@ -1,10 +1,11 @@
 import { Link } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
+import AppLogo from '@/components/app-logo';
 import LanguageSwitcher from '@/components/language-switcher';
 import { useTrans } from '@/hooks/use-trans';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
+/** Sign-in and sign-up pages: the same navy band as the app, and the form on a single page below it. */
 export default function AuthSimpleLayout({
     children,
     title,
@@ -13,35 +14,36 @@ export default function AuthSimpleLayout({
     const { t } = useTrans();
 
     return (
-        <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
-            <LanguageSwitcher className="absolute top-4 right-4" />
-            <div className="w-full max-w-sm">
-                <div className="flex flex-col gap-8">
-                    <div className="flex flex-col items-center gap-4">
-                        <Link
-                            href={home()}
-                            className="flex flex-col items-center gap-2 font-medium"
-                        >
-                            <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                                <AppLogoIcon className="size-9 fill-current text-[var(--foreground)] dark:text-white" />
-                            </div>
-                            <span className="sr-only">
-                                {title ? t(title) : null}
-                            </span>
-                        </Link>
-
-                        <div className="space-y-2 text-center">
-                            <h1 className="text-xl font-medium">
-                                {title ? t(title) : null}
-                            </h1>
-                            <p className="text-center text-sm text-muted-foreground">
-                                {description ? t(description) : null}
-                            </p>
-                        </div>
-                    </div>
-                    {children}
+        <div className="flex min-h-svh flex-col bg-background">
+            <header className="guilloche bg-band text-band-foreground">
+                <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-12">
+                    <Link
+                        href={home()}
+                        className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-band-foreground"
+                    >
+                        <AppLogo />
+                    </Link>
+                    <LanguageSwitcher className="h-9 border-band-muted/40 bg-transparent text-band-foreground hover:bg-white/10 [&_svg]:!text-band-muted" />
                 </div>
-            </div>
+            </header>
+
+            <main className="flex flex-1 justify-center px-4 py-12 sm:py-20">
+                <div className="w-full max-w-sm space-y-6">
+                    <div className="space-y-1.5">
+                        <h1 className="text-2xl leading-tight font-semibold tracking-[-0.015em]">
+                            {title ? t(title) : null}
+                        </h1>
+                        {description && (
+                            <p className="text-muted-foreground">
+                                {t(description)}
+                            </p>
+                        )}
+                    </div>
+                    <div className="rounded-md border bg-card p-6 shadow-[0_14px_30px_-18px_rgb(20_32_46/0.3)]">
+                        {children}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 }

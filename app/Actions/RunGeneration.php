@@ -49,7 +49,7 @@ class RunGeneration
 
             $this->persistOutput->handle($generation, $output, $questions);
         } catch (BusinessRuleException $exception) {
-            $generation->fail($exception->getMessage(), now()->toImmutable());
+            $generation->fail($exception->getMessage(), now()->toImmutable(), $exception->errorCode);
         } catch (GatewayException $exception) {
             report($exception);
             $generation->fail(GatewayException::userMessage(), now()->toImmutable());

@@ -1,5 +1,4 @@
 import { AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
 import GeneratedAnswerController from '@/actions/App/Http/Controllers/GeneratedAnswerController';
 import GeneratedAnswerRevertController from '@/actions/App/Http/Controllers/GeneratedAnswerRevertController';
 import GeneratedDocumentController from '@/actions/App/Http/Controllers/GeneratedDocumentController';
@@ -12,20 +11,37 @@ import { TabList, TabPanel } from '@/components/ui/tabs';
 import { useTrans } from '@/hooks/use-trans';
 import type { Application, Generation } from '@/types';
 
+/** The tabs this version has, in order: its documents, the answers, the report, and always the job itself. */
+export function applicationTabValues(generation: Generation | null): string[] {
+    const result = generation?.status.value === 'succeeded' ? generation : null;
+
+    return [
+        ...(result?.documents.map((document) => document.type) ?? []),
+        ...(result && result.answers.length > 0 ? ['questions'] : []),
+        ...(result?.report ? ['report'] : []),
+        'job',
+    ];
+}
+
 /**
- * The viewed version's documents, answers and report, plus the job itself. Documents and answers only exist for
- * a version that succeeded; the Job tab is always there.
+ * The viewed version's documents on their sheets, its answers and report, plus the job itself. Documents and
+ * answers only exist for a version that succeeded; the Job tab is always there. The page owns the picked tab, so
+ * the package list beside it can open a document.
  */
 export default function ApplicationTabs({
     application,
     generation,
     limits,
     canEdit,
+    active,
+    onActiveChange,
 }: {
     application: Application;
     generation: Generation | null;
     limits: { document: number; answer: number };
     canEdit: boolean;
+    active: string;
+    onActiveChange: (value: string) => void;
 }) {
     const { t } = useTrans();
     const result = generation?.status.value === 'succeeded' ? generation : null;
@@ -36,7 +52,9 @@ export default function ApplicationTabs({
             label: (
                 <TabLabel
                     label={document.label}
-                    count={document.todos.length + document.warnings.length}
+                    count={
+                        new Set(document.todos).size + document.warnings.length
+                    }
                 />
             ),
         })) ?? []),
@@ -60,25 +78,22 @@ export default function ApplicationTabs({
         { value: 'job', label: t('Job') },
     ];
 
-    const [picked, setPicked] = useState(tabs[0].value);
-    // A version without the picked tab (no cover letter, say) falls back to the first one.
-    const active = tabs.some((tab) => tab.value === picked)
-        ? picked
-        : tabs[0].value;
-
     return (
         <section
             id="documents"
-            className="scroll-mt-20 space-y-6 rounded-xl border p-4 sm:p-6"
+            className="min-w-0 scroll-mt-6"
+            aria-labelledby="documents-heading"
         >
-            {result && <ReviewBanner generation={result} />}
-
+            {/* Names the section for the outline (h1 role → h2 here → h3 documents and report groups). */}
+            <h2 id="documents-heading" className="sr-only">
+                {t('Documents')}
+            </h2>
             <TabList
                 id="application"
                 label={t('Application sections')}
                 tabs={tabs}
                 value={active}
-                onValueChange={setPicked}
+                onValueChange={onActiveChange}
             />
 
             {result?.documents
@@ -88,15 +103,17 @@ export default function ApplicationTabs({
                         key={document.id}
                         id="application"
                         value={document.type}
+                        className="space-y-5"
                     >
                         <GeneratedTextEditor
                             key={`${document.id}:${document.updated_at}`}
                             id={document.id}
                             label={document.label}
                             content={document.content}
+                            html={document.html}
                             edited={document.edited}
                             maxLength={limits.document}
-                            rows={document.type === 'cv' ? 28 : 14}
+                            rows={document.type === 'cv' ? 30 : 16}
                             update={GeneratedDocumentController.update(
                                 document.id,
                             )}
@@ -122,6 +139,7 @@ export default function ApplicationTabs({
                                     : undefined
                             }
                         />
+                        <AtsNotes warnings={document.warnings} />
                     </TabPanel>
                 ))}
 
@@ -129,42 +147,43 @@ export default function ApplicationTabs({
                 <TabPanel
                     id="application"
                     value="questions"
-                    className="space-y-8"
+                    className="space-y-10 pt-6"
                 >
                     {result.answers.map((answer, index) => (
                         <GeneratedTextEditor
                             key={`${answer.id}:${answer.updated_at}`}
                             id={answer.id}
                             label={
-                                <span className="font-normal">
-                                    <span className="font-medium">
+                                <>
+                                    <span className="text-muted-foreground tabular-nums">
                                         {index + 1}.
                                     </span>{' '}
                                     {answer.question}
-                                </span>
+                                </>
                             }
                             content={answer.content}
                             edited={answer.edited}
                             maxLength={limits.answer}
-                            rows={6}
+                            rows={8}
                             update={GeneratedAnswerController.update(answer.id)}
                             revert={GeneratedAnswerRevertController.store(
                                 answer.id,
                             )}
                             canEdit={canEdit}
+                            compact
                         />
                     ))}
                 </TabPanel>
             )}
 
             {result?.report && active === 'report' && (
-                <TabPanel id="application" value="report">
+                <TabPanel id="application" value="report" className="pt-6">
                     <GenerationReport report={result.report} />
                 </TabPanel>
             )}
 
             {active === 'job' && (
-                <TabPanel id="application" value="job">
+                <TabPanel id="application" value="job" className="pt-6">
                     <JobDetails application={application} />
                 </TabPanel>
             )}
@@ -180,68 +199,42 @@ function TabLabel({ label, count }: { label: string; count: number }) {
             {label}
             {count > 0 && (
                 <span
-                    className="rounded-full bg-amber-100 px-1.5 text-xs text-amber-900 tabular-nums dark:bg-amber-950 dark:text-amber-200"
+                    className="rounded-full bg-todo px-1.5 text-xs font-bold text-todo-foreground tabular-nums"
                     title={t('Needs your review')}
                 >
                     {count}
+                    <span className="sr-only"> {t('Needs your review')}</span>
                 </span>
             )}
         </>
     );
 }
 
-/** `[TODO: …]` placeholders and CV structure warnings across the version. Never blocks anything. */
-function ReviewBanner({ generation }: { generation: Generation }) {
+/**
+ * CV structure warnings, under the sheet so the document comes first. Its `[TODO: …]` placeholders are already
+ * highlighted on the sheet and counted on the tab and in the package. Never blocks anything.
+ */
+function AtsNotes({ warnings }: { warnings: string[] }) {
     const { t } = useTrans();
-    const todos = [
-        ...new Set([
-            ...generation.documents.flatMap((document) => document.todos),
-            ...generation.answers.flatMap((answer) => answer.todos),
-        ]),
-    ];
-    const warnings = generation.documents.flatMap((document) =>
-        document.warnings.map((warning) => `${document.label}: ${warning}`),
-    );
 
-    if (todos.length === 0 && warnings.length === 0) {
+    if (warnings.length === 0) {
         return null;
     }
 
     return (
-        <div
-            className="flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
-            role="status"
-        >
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            <div className="min-w-0 space-y-2">
-                {todos.length > 0 && (
-                    <div className="space-y-1">
-                        <p className="font-medium">
-                            {t(
-                                'Before you send it, fill in these placeholders:',
-                            )}
-                        </p>
-                        <ul className="list-disc pl-5 break-words">
-                            {todos.map((todo) => (
-                                <li key={todo}>{todo}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-                {warnings.length > 0 && (
-                    <div className="space-y-1">
-                        <p className="font-medium">
-                            {t(
-                                'Worth fixing so applicant tracking systems read the CV well:',
-                            )}
-                        </p>
-                        <ul className="list-disc pl-5 break-words">
-                            {warnings.map((warning) => (
-                                <li key={warning}>{warning}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+        <div className="flex gap-2 border-t pt-4 text-sm text-muted-foreground">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-todo-foreground dark:text-todo" />
+            <div>
+                <p className="font-semibold text-foreground">
+                    {t(
+                        'Worth fixing so applicant tracking systems read the CV well:',
+                    )}
+                </p>
+                <ul className="mt-1 list-disc pl-5 break-words">
+                    {warnings.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                    ))}
+                </ul>
             </div>
         </div>
     );

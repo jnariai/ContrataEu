@@ -105,7 +105,7 @@ function CredentialRow({ credential }: { credential: Credential }) {
     return (
         <li
             className={cn(
-                'space-y-3 rounded-xl border p-4',
+                'space-y-3 rounded-md border p-4',
                 credential.active && 'border-primary ring-1 ring-primary',
             )}
         >
@@ -377,7 +377,7 @@ function AddCredential({
                             <InputError message={errors.provider} />
                             {provider.notice && (
                                 <p
-                                    className="rounded-md bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                    className="rounded-md bg-todo/60 p-2 text-xs text-todo-foreground dark:bg-todo/15 dark:text-todo"
                                     role="note"
                                 >
                                     {provider.notice}
@@ -395,7 +395,7 @@ function AddCredential({
                                         rel="noreferrer noopener"
                                         className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
                                     >
-                                        {t('Get a :provider key', {
+                                        {t('Get a key from :provider', {
                                             provider: provider.label,
                                         })}
                                         <ExternalLink className="size-3" />

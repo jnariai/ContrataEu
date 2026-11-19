@@ -1,19 +1,18 @@
-import * as React from 'react';
-import { SidebarInset } from '@/components/ui/sidebar';
-import type { AppVariant } from '@/types';
+import type * as React from 'react';
+import { cn } from '@/lib/utils';
 
-type Props = React.ComponentProps<'main'> & {
-    variant?: AppVariant;
-};
-
-export function AppContent({ variant = 'sidebar', children, ...props }: Props) {
-    if (variant === 'sidebar') {
-        return <SidebarInset {...props}>{children}</SidebarInset>;
-    }
-
+/** The one page frame: every signed-in page shares the band's width and gutters, so content edges never move. */
+export function AppContent({
+    children,
+    className,
+    ...props
+}: React.ComponentProps<'main'>) {
     return (
         <main
-            className="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-xl"
+            className={cn(
+                'mx-auto flex w-full max-w-[90rem] flex-1 flex-col px-4 sm:px-6 lg:px-12',
+                className,
+            )}
             {...props}
         >
             {children}

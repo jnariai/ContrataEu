@@ -56,6 +56,22 @@ it('reports a failed last attempt with its message, keeping the last good versio
             ->has('failures.0.finished_at'));
 });
 
+it('says whether a failure is fixed in the AI keys', function (?string $errorCode, bool $fixInAiKeys): void {
+    $application = applicationWithVersions(fn ($factory) => $factory->failed()->create(['error_code' => $errorCode]));
+
+    $this->actingAs($application->user)->get(route('applications.show', $application))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('failures.0.fix_in_ai_keys', $fixInAiKeys));
+})->with([
+    'rejected key' => ['ai_provider.invalid_key', true],
+    'out of credit' => ['ai_provider.out_of_credit', true],
+    'unknown model' => ['ai_provider.invalid_request', true],
+    'key deleted' => ['generation.key_removed', true],
+    'rate limited' => ['ai_provider.rate_limited', false],
+    'too slow' => ['ai_provider.too_slow', false],
+    'no cause recorded' => [null, false],
+]);
+
 it('does not report an old failure once a later run succeeded', function (): void {
     $application = Application::factory()->create();
     Generation::factory()->for($application)->failed()->create();
@@ -128,4 +144,18 @@ it('offers the user’s AI keys next to Generate, active first, without the key 
         ->where('aiKeys.1.active', false)
         ->missing('aiKeys.0.api_key'));
     expect($response->getContent())->not->toContain('SUPERSECRET');
+});
+
+it('sends the CV rendered for the document sheet, without raw HTML or unsafe links', function (): void {
+    $markdown = "# Jane Doe\n\n<script>alert(1)</script>\n\n[site](javascript:alert(1))";
+    $application = Application::factory()->create();
+    $generation = Generation::factory()->for($application)->version(1)->create();
+    GeneratedDocument::factory()->for($generation)->create(['type' => DocumentType::Cv, 'content' => $markdown, 'original_content' => $markdown]);
+    $application->adoptGeneration($generation);
+
+    $this->actingAs($application->user)->get(route('applications.show', $application))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('generation.documents.0.html', fn (string $html): bool => str_contains($html, '<h1>Jane Doe</h1>')
+                && ! str_contains($html, '<script>')
+                && ! str_contains($html, 'javascript:')));
 });

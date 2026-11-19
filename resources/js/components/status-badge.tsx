@@ -1,17 +1,21 @@
 import { cn } from '@/lib/utils';
 import type { StatusOption } from '@/types';
 
-/** Server sends the color name with the status; this maps it to badge classes (light and dark). */
-const colors: Record<string, string> = {
-    gray: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
-    blue: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
-    indigo: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300',
-    amber: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-    green: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300',
-    red: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
-    slate: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+/**
+ * Status inks, as the office stamps (carimbos) that mark working papers: violet is the classic stamp ink for
+ * "applied"; rejected and withdrawn are voids. Keyed by the status value, so the server's colour name is not needed.
+ */
+export const statusInk: Record<string, string> = {
+    draft: 'text-ink-grey border-ink-grey border-dashed',
+    ready: 'text-ink-grey border-ink-grey',
+    applied: 'text-ink-violet border-ink-violet',
+    interviewing: 'text-ink-blue border-ink-blue',
+    offer: 'text-ink-green border-ink-green',
+    rejected: 'text-ink-red border-ink-red',
+    withdrawn: 'text-ink-red border-ink-red border-dashed',
 };
 
+/** The compact stamp: a status in its ink, readable as text (never colour alone). Used in lists and menus. */
 export default function StatusBadge({
     status,
     className,
@@ -22,8 +26,8 @@ export default function StatusBadge({
     return (
         <span
             className={cn(
-                'inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-                colors[status.color] ?? colors.gray,
+                'inline-flex shrink-0 items-center rounded-[3px] border-[1.5px] px-1.5 py-px text-[0.6875rem] leading-4 font-bold tracking-[0.08em] whitespace-nowrap uppercase',
+                statusInk[status.value] ?? statusInk.draft,
                 className,
             )}
         >

@@ -15,7 +15,6 @@ declare module '@inertiajs/core' {
             locale: CurrentLocale;
             languages: LanguageOption[];
             translations: Translations;
-            sidebarOpen: boolean;
             [key: string]: unknown;
         };
     }

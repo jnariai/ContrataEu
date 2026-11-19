@@ -64,7 +64,7 @@ export default function ErrorPage({ status, message }: Props) {
             <Head title={t(page.title)} />
             <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 text-center">
                 <AppLogoIcon
-                    className="size-10 fill-current text-[#1F3A5F] dark:text-white"
+                    className="size-10 text-primary dark:text-ink-blue"
                     aria-hidden
                 />
                 <div className="max-w-md space-y-2">

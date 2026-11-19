@@ -1,0 +1,744 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-18T19:05:12Z",
+  "title": "Design System: ContrataEu",
+  "extensions": {
+    "colorMeta": {
+      "ink-blue-cover": {
+        "role": "primary",
+        "displayName": "Ink-Blue Cover",
+        "canonical": "#1f3a5f",
+        "tonalRamp": [
+          "#09111c",
+          "#101d30",
+          "#162942",
+          "#1b3354",
+          "#4c617f",
+          "#8493a7",
+          "#bcc4cf",
+          "#e9ebef"
+        ],
+        "cssVar": "--primary / --band / --ink-blue"
+      },
+      "on-cover": {
+        "role": "neutral",
+        "displayName": "On Cover",
+        "canonical": "#f1f5f8",
+        "tonalRamp": [
+          "#484a4a",
+          "#787a7c",
+          "#a9acae",
+          "#d4d8da",
+          "#f4f7f9",
+          "#f7fafb",
+          "#fbfcfd",
+          "#fefefe"
+        ]
+      },
+      "cover-muted": {
+        "role": "neutral",
+        "displayName": "Cover Muted",
+        "canonical": "#b9c8d6",
+        "tonalRamp": [
+          "#383c40",
+          "#5c646b",
+          "#828c96",
+          "#a3b0bc",
+          "#c7d3de",
+          "#d8e1e8",
+          "#eaeef3",
+          "#f8fafb"
+        ]
+      },
+      "visa-page": {
+        "role": "neutral",
+        "displayName": "Visa Page",
+        "canonical": "#e7edea",
+        "tonalRamp": [
+          "#454746",
+          "#747675",
+          "#a2a6a4",
+          "#cbd1ce",
+          "#ecf1ee",
+          "#f2f5f3",
+          "#f8faf9",
+          "#fdfdfd"
+        ],
+        "cssVar": "--background"
+      },
+      "visa-card": {
+        "role": "neutral",
+        "displayName": "Visa Card",
+        "canonical": "#f3f6f4",
+        "tonalRamp": [
+          "#494a49",
+          "#7a7b7a",
+          "#aaacab",
+          "#d6d8d7",
+          "#f5f8f6",
+          "#f8faf9",
+          "#fbfcfc",
+          "#fefefe"
+        ]
+      },
+      "visa-popover": {
+        "role": "neutral",
+        "displayName": "Visa Popover",
+        "canonical": "#f8faf9",
+        "tonalRamp": [
+          "#4a4b4b",
+          "#7c7d7c",
+          "#aeafae",
+          "#dadcdb",
+          "#f9fbfa",
+          "#fbfcfc",
+          "#fdfefd",
+          "#fefefe"
+        ]
+      },
+      "visa-secondary": {
+        "role": "neutral",
+        "displayName": "Visa Secondary",
+        "canonical": "#d9e3df",
+        "tonalRamp": [
+          "#414443",
+          "#6c7270",
+          "#989f9c",
+          "#bfc8c4",
+          "#e1e9e5",
+          "#eaf0ed",
+          "#f4f7f5",
+          "#fbfcfc"
+        ]
+      },
+      "visa-muted": {
+        "role": "neutral",
+        "displayName": "Visa Muted",
+        "canonical": "#dce5e1",
+        "tonalRamp": [
+          "#424544",
+          "#6e7270",
+          "#9aa09e",
+          "#c2cac6",
+          "#e3eae7",
+          "#ecf1ee",
+          "#f4f7f6",
+          "#fcfcfc"
+        ]
+      },
+      "visa-accent": {
+        "role": "neutral",
+        "displayName": "Visa Accent",
+        "canonical": "#d5e0db",
+        "tonalRamp": [
+          "#404342",
+          "#6a706e",
+          "#959d99",
+          "#bbc5c1",
+          "#dde6e2",
+          "#e8eeeb",
+          "#f2f6f4",
+          "#fbfcfb"
+        ]
+      },
+      "ink-text": {
+        "role": "neutral",
+        "displayName": "Ink Text",
+        "canonical": "#14202e",
+        "tonalRamp": [
+          "#060a0e",
+          "#0a1017",
+          "#0e1620",
+          "#121c28",
+          "#434d58",
+          "#7e848c",
+          "#b8bcc0",
+          "#e8e9ea"
+        ]
+      },
+      "ink-text-muted": {
+        "role": "neutral",
+        "displayName": "Ink Text Muted",
+        "canonical": "#45586a",
+        "tonalRamp": [
+          "#151a20",
+          "#222c35",
+          "#303e4a",
+          "#3d4d5d",
+          "#6a7988",
+          "#99a3ad",
+          "#c7cdd2",
+          "#eceef0"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#c2cfca",
+        "tonalRamp": [
+          "#3a3e3d",
+          "#616865",
+          "#88918d",
+          "#abb6b2",
+          "#ced9d5",
+          "#dde5e2",
+          "#edf1ef",
+          "#f9fafa"
+        ]
+      },
+      "field-stroke": {
+        "role": "neutral",
+        "displayName": "Field Stroke",
+        "canonical": "#7c908a",
+        "tonalRamp": [
+          "#252b29",
+          "#3e4845",
+          "#576561",
+          "#6d7f79",
+          "#96a6a1",
+          "#b7c2bf",
+          "#d8dedc",
+          "#f2f4f3"
+        ]
+      },
+      "sheet-paper": {
+        "role": "neutral",
+        "displayName": "Sheet Paper",
+        "canonical": "#fdfcf9",
+        "tonalRamp": [
+          "#4c4c4b",
+          "#7e7e7c",
+          "#b1b0ae",
+          "#dfdedb",
+          "#fdfdfa",
+          "#fefdfc",
+          "#fefefd",
+          "#fffffe"
+        ],
+        "cssVar": "--sheet"
+      },
+      "sheet-text": {
+        "role": "neutral",
+        "displayName": "Sheet Text",
+        "canonical": "#111827",
+        "tonalRamp": [
+          "#05070c",
+          "#080c14",
+          "#0c111b",
+          "#0f1522",
+          "#414652",
+          "#7c8088",
+          "#b8babe",
+          "#e7e8e9"
+        ]
+      },
+      "sheet-text-muted": {
+        "role": "neutral",
+        "displayName": "Sheet Text Muted",
+        "canonical": "#5f6774",
+        "tonalRamp": [
+          "#1c1f23",
+          "#30343a",
+          "#424851",
+          "#545b66",
+          "#7f8590",
+          "#a7abb3",
+          "#cfd1d5",
+          "#eff0f1"
+        ]
+      },
+      "stamp-grey": {
+        "role": "secondary",
+        "displayName": "Stamp Grey (draft, ready)",
+        "canonical": "#4c5e6f",
+        "tonalRamp": [
+          "#171c21",
+          "#262f38",
+          "#35424e",
+          "#435362",
+          "#707e8c",
+          "#9da6b0",
+          "#c9cfd4",
+          "#edeff1"
+        ]
+      },
+      "stamp-violet": {
+        "role": "secondary",
+        "displayName": "Stamp Violet (applied)",
+        "canonical": "#5b3e8f",
+        "tonalRamp": [
+          "#1b132b",
+          "#2e1f48",
+          "#402b64",
+          "#50377e",
+          "#7c65a5",
+          "#a595c1",
+          "#cec5dd",
+          "#efecf4"
+        ],
+        "cssVar": "--ink-violet"
+      },
+      "stamp-green": {
+        "role": "secondary",
+        "displayName": "Stamp Green (offer, done)",
+        "canonical": "#2f6b4f",
+        "tonalRamp": [
+          "#0e2018",
+          "#183628",
+          "#214b37",
+          "#295e46",
+          "#598972",
+          "#8dae9e",
+          "#c1d3ca",
+          "#eaf0ed"
+        ]
+      },
+      "stamp-red": {
+        "role": "secondary",
+        "displayName": "Stamp Red (void, error)",
+        "canonical": "#b3362c",
+        "tonalRamp": [
+          "#36100d",
+          "#5a1b16",
+          "#7d261f",
+          "#9e3027",
+          "#c25e56",
+          "#d5908b",
+          "#e8c3c0",
+          "#f7ebea"
+        ]
+      },
+      "todo-highlight": {
+        "role": "tertiary",
+        "displayName": "TODO Highlight",
+        "canonical": "#f6e7c8",
+        "tonalRamp": [
+          "#4a453c",
+          "#7b7464",
+          "#aca28c",
+          "#d8cbb0",
+          "#f8ecd3",
+          "#faf2e1",
+          "#fcf8ee",
+          "#fefdfa"
+        ],
+        "cssVar": "--todo"
+      },
+      "todo-ink": {
+        "role": "tertiary",
+        "displayName": "TODO Ink",
+        "canonical": "#6b4300",
+        "tonalRamp": [
+          "#201400",
+          "#362200",
+          "#4b2f00",
+          "#5e3b00",
+          "#896933",
+          "#ae9873",
+          "#d3c7b2",
+          "#f0ece6"
+        ]
+      },
+      "night-cover-ground": {
+        "role": "neutral",
+        "displayName": "Night Cover Ground",
+        "canonical": "#0e1722",
+        "tonalRamp": [
+          "#04070a",
+          "#070c11",
+          "#0a1018",
+          "#0c141e",
+          "#3e454e",
+          "#7a7f85",
+          "#b7b9bd",
+          "#e7e8e9"
+        ]
+      },
+      "night-card": {
+        "role": "neutral",
+        "displayName": "Night Card",
+        "canonical": "#142130",
+        "tonalRamp": [
+          "#060a0e",
+          "#0a1018",
+          "#0e1722",
+          "#121d2a",
+          "#434d59",
+          "#7e858d",
+          "#b8bcc1",
+          "#e8e9ea"
+        ]
+      },
+      "night-band": {
+        "role": "neutral",
+        "displayName": "Night Band",
+        "canonical": "#17345a",
+        "tonalRamp": [
+          "#07101b",
+          "#0c1a2d",
+          "#10243f",
+          "#142e4f",
+          "#455d7b",
+          "#7f8fa4",
+          "#b9c2ce",
+          "#e8ebee"
+        ]
+      },
+      "night-primary": {
+        "role": "neutral",
+        "displayName": "Night Primary",
+        "canonical": "#3b6296",
+        "tonalRamp": [
+          "#121d2d",
+          "#1e314b",
+          "#294569",
+          "#345684",
+          "#6281ab",
+          "#93a9c5",
+          "#c4d0e0",
+          "#ebeff4"
+        ]
+      },
+      "night-text": {
+        "role": "neutral",
+        "displayName": "Night Text",
+        "canonical": "#e3e9ee",
+        "tonalRamp": [
+          "#444647",
+          "#727477",
+          "#9fa3a7",
+          "#c8cdd1",
+          "#e9edf1",
+          "#f0f3f6",
+          "#f7f8fa",
+          "#fcfdfd"
+        ]
+      },
+      "night-rule": {
+        "role": "neutral",
+        "displayName": "Night Rule",
+        "canonical": "#283a4d",
+        "tonalRamp": [
+          "#0c1117",
+          "#141d26",
+          "#1c2936",
+          "#233344",
+          "#536171",
+          "#89939d",
+          "#bec4ca",
+          "#eaebed"
+        ]
+      },
+      "night-sheet-paper": {
+        "role": "neutral",
+        "displayName": "Night Sheet Paper",
+        "canonical": "#ebe8e1",
+        "tonalRamp": [
+          "#464644",
+          "#767470",
+          "#a4a29e",
+          "#cfccc6",
+          "#efede7",
+          "#f4f2ee",
+          "#f9f8f6",
+          "#fdfdfc"
+        ]
+      },
+      "night-stamp-blue": {
+        "role": "neutral",
+        "displayName": "Night Stamp Blue",
+        "canonical": "#9dbce3",
+        "tonalRamp": [
+          "#2f3844",
+          "#4e5e72",
+          "#6e849f",
+          "#8aa5c8",
+          "#b1c9e9",
+          "#c9daf0",
+          "#e2ebf7",
+          "#f5f8fc"
+        ]
+      },
+      "night-stamp-violet": {
+        "role": "neutral",
+        "displayName": "Night Stamp Violet",
+        "canonical": "#bba6ea",
+        "tonalRamp": [
+          "#383246",
+          "#5e5375",
+          "#8374a4",
+          "#a592ce",
+          "#c9b8ee",
+          "#dacef3",
+          "#ebe4f9",
+          "#f8f6fd"
+        ]
+      },
+      "night-stamp-green": {
+        "role": "neutral",
+        "displayName": "Night Stamp Green",
+        "canonical": "#85c7a5",
+        "tonalRamp": [
+          "#283c32",
+          "#426452",
+          "#5d8b74",
+          "#75af91",
+          "#9dd2b7",
+          "#bce0ce",
+          "#daeee4",
+          "#f3f9f6"
+        ]
+      },
+      "night-stamp-red": {
+        "role": "neutral",
+        "displayName": "Night Stamp Red",
+        "canonical": "#f29185",
+        "tonalRamp": [
+          "#492c28",
+          "#794842",
+          "#a9665d",
+          "#d58075",
+          "#f5a79d",
+          "#f8c2bc",
+          "#fbdeda",
+          "#fef4f3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Welcome hero headline only; 2.5rem on phones, 3.5rem from sm."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The page's own h1."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings and dialog titles."
+      },
+      "item-title": {
+        "displayName": "Item title",
+        "purpose": "List rows and document labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Chrome text; 1rem for page descriptions and phone inputs."
+      },
+      "label": {
+        "displayName": "Field label",
+        "purpose": "Uppercase tracked labels naming fields and groups; never a kicker above a heading."
+      },
+      "stamp": {
+        "displayName": "Stamp",
+        "purpose": "Entry stamp status word, uppercase."
+      },
+      "document-name": {
+        "displayName": "Document name",
+        "purpose": "Candidate name on the sheet, mirroring the PDF."
+      },
+      "document-section": {
+        "displayName": "Document section",
+        "purpose": "Sheet section headings in ink blue with a 1px underline."
+      },
+      "document-body": {
+        "displayName": "Document body",
+        "purpose": "Sheet paragraphs, max 75ch."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet-lie",
+        "value": "0 1px 0 var(--border), 0 14px 30px -16px rgb(20 32 46 / 0.32)",
+        "purpose": "The document sheet lying on the page."
+      },
+      {
+        "name": "sample-lie",
+        "value": "0 1px 0 var(--border), 0 28px 50px -24px rgb(20 32 46 / 0.4)",
+        "purpose": "The welcome page's sample sheet."
+      },
+      {
+        "name": "auth-card",
+        "value": "0 14px 30px -18px rgb(20 32 46 / 0.3)",
+        "purpose": "The auth card."
+      },
+      {
+        "name": "menu-lift",
+        "value": "0 10px 24px -12px rgb(20 32 46 / 0.35)",
+        "purpose": "Dropdown menus and select popovers."
+      },
+      {
+        "name": "dialog-lift",
+        "value": "0 24px 48px -20px rgb(10 29 51 / 0.45)",
+        "purpose": "Dialogs, over a #0a1d33 scrim at 55%."
+      },
+      {
+        "name": "tab-join",
+        "value": "0 1px 0 var(--sheet)",
+        "purpose": "Active tab covers the rule so it joins the sheet."
+      }
+    ],
+    "motion": [
+      {
+        "name": "stamp-press",
+        "value": "320ms cubic-bezier(0.16, 1, 0.3, 1); rotate(-1.5deg) scale 1.18 -> 0.97 -> 1, opacity 0 -> 1",
+        "purpose": "Entry stamp pressed once when status changes on the page; never on load; none under reduced motion."
+      },
+      {
+        "name": "state-colour",
+        "value": "150ms ease (Tailwind default) on color, background-color, border-color",
+        "purpose": "Buttons, inputs, nav and tabs change colour only; no movement."
+      },
+      {
+        "name": "overlay-in",
+        "value": "200ms fade + zoom-in-95",
+        "purpose": "Dialogs and menus (tw-animate-css)."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "One per area: Generate again, New application, Get started.",
+      "html": "<button class=\"ds-btn-primary\">Generate again</button>",
+      "css": ".ds-btn-primary{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border:0;border-radius:3px;background:var(--primary,#1f3a5f);color:var(--primary-foreground,#fff);font-size:14px;font-weight:600;cursor:pointer;transition:background-color .15s}.ds-btn-primary:hover{background:color-mix(in srgb,var(--primary,#1f3a5f) 88%,transparent)}.ds-btn-primary:focus-visible{outline:2px solid var(--ring,#1f3a5f);outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions: Download, Edit, Copy, Log in.",
+      "html": "<button class=\"ds-btn-outline\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 15V3\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/></svg>Download CV · 2 to fix</button>",
+      "css": ".ds-btn-outline{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid color-mix(in srgb,var(--primary,#1f3a5f) 70%,transparent);border-radius:3px;background:transparent;color:var(--primary,#1f3a5f);font-size:14px;font-weight:600;cursor:pointer;transition:background-color .15s}.ds-btn-outline:hover{background:color-mix(in srgb,var(--primary,#1f3a5f) 8%,transparent)}.ds-btn-outline:focus-visible{outline:2px solid var(--ring,#1f3a5f);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Inputs, selects and textareas on the visa-card fill.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Company</span><input class=\"ds-input\" placeholder=\"Acme Payments\"></label>",
+      "css": ".ds-field{display:grid;gap:6px;font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';}.ds-field-label{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--muted-foreground,#45586a)}.ds-input{height:36px;padding:4px 12px;border:1px solid var(--input,#7c908a);border-radius:3px;background:var(--card,#f3f6f4);color:var(--foreground,#14202e);font:inherit;font-size:14px;outline:none;transition:border-color .15s}.ds-input::placeholder{color:var(--muted-foreground,#45586a)}.ds-input:focus-visible{border-color:var(--ring,#1f3a5f);outline:2px solid color-mix(in srgb,var(--ring,#1f3a5f) 40%,transparent);outline-offset:1px}"
+    },
+    {
+      "name": "Navy Band",
+      "kind": "nav",
+      "refersTo": "nav-band",
+      "description": "The passport cover with guilloché hairlines; tops every page.",
+      "html": "<header class=\"ds-band\"><strong class=\"ds-band-mark\">ContrataEu</strong><nav class=\"ds-band-nav\"><a aria-current=\"page\" href=\"#\">Applications</a><a href=\"#\">New application</a><a href=\"#\">Settings</a></nav><span class=\"ds-band-user\">Account</span></header>",
+      "css": ".ds-band{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';display:flex;align-items:stretch;gap:40px;height:64px;padding:0 48px;background-color:var(--band,#1f3a5f);color:var(--band-foreground,#f1f5f8);background-image:repeating-radial-gradient(circle at 82% 180%,transparent 0 11px,color-mix(in srgb,var(--band-foreground,#f1f5f8) 7%,transparent) 11px 12px),repeating-radial-gradient(circle at 18% -120%,transparent 0 15px,color-mix(in srgb,var(--band-foreground,#f1f5f8) 5%,transparent) 15px 16px)}.ds-band-mark{align-self:center;font-size:18px}.ds-band-nav{display:flex;gap:28px}.ds-band-nav a{display:flex;align-items:center;padding-top:2px;border-bottom:2px solid transparent;color:var(--band-muted,#b9c8d6);font-size:14px;text-decoration:none;transition:color .15s}.ds-band-nav a:hover{color:var(--band-foreground,#f1f5f8)}.ds-band-nav a[aria-current=page]{border-color:var(--band-foreground,#f1f5f8);color:var(--band-foreground,#f1f5f8);font-weight:600}.ds-band-nav a:focus-visible{outline:2px solid var(--band-foreground,#f1f5f8);outline-offset:2px}.ds-band-user{margin-left:auto;align-self:center;font-size:14px;color:var(--band-muted,#b9c8d6)}"
+    },
+    {
+      "name": "Entry Stamp",
+      "kind": "custom",
+      "refersTo": "status-stamp",
+      "description": "Status, date and language inked together; pressed once when the status changes.",
+      "html": "<div class=\"ds-stamp\"><span class=\"ds-stamp-status\">Applied</span><span class=\"ds-stamp-line\">Nov 17, 2026 · PT-BR</span></div>",
+      "css": "@keyframes ds-stamp-press{0%{opacity:0;transform:rotate(-1.5deg) scale(1.18)}60%{opacity:1;transform:rotate(-1.5deg) scale(.97)}100%{transform:rotate(-1.5deg) scale(1)}}.ds-stamp{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';display:inline-flex;flex-direction:column;padding:8px 12px 6px;border:2px solid var(--ink-violet,#5b3e8f);border-radius:3px;color:var(--ink-violet,#5b3e8f);transform:rotate(-1.5deg)}.ds-stamp:hover{animation:ds-stamp-press 320ms cubic-bezier(.16,1,.3,1)}.ds-stamp-status{font-size:22px;line-height:1;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.ds-stamp-line{margin-top:4px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-variant-numeric:tabular-nums}@media (prefers-reduced-motion:reduce){.ds-stamp:hover{animation:none}}"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Compact stamps in carimbo inks; the text is the status.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-draft\">Draft</span><span class=\"ds-badge ds-ready\">Ready</span><span class=\"ds-badge ds-applied\">Applied</span><span class=\"ds-badge ds-interviewing\">Interviewing</span><span class=\"ds-badge ds-offer\">Offer</span><span class=\"ds-badge ds-rejected\">Rejected</span><span class=\"ds-badge ds-withdrawn\">Withdrawn</span></div>",
+      "css": ".ds-badges{display:flex;flex-wrap:wrap;gap:8px}.ds-badge{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';display:inline-flex;padding:1px 6px;border:1.5px solid currentColor;border-radius:3px;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.ds-draft{color:var(--ink-grey,#4c5e6f);border-style:dashed}.ds-ready{color:var(--ink-grey,#4c5e6f)}.ds-applied{color:var(--ink-violet,#5b3e8f)}.ds-interviewing{color:var(--ink-blue,#1f3a5f)}.ds-offer{color:var(--ink-green,#2f6b4f)}.ds-rejected{color:var(--ink-red,#b3362c)}.ds-withdrawn{color:var(--ink-red,#b3362c);border-style:dashed}"
+    },
+    {
+      "name": "Language Pair",
+      "kind": "chip",
+      "description": "EN and PT-BR as one mark; the language in use is inked.",
+      "html": "<span class=\"ds-lang\"><span lang=\"en\">EN</span><span lang=\"pt-BR\" class=\"ds-on\">PT-BR</span></span>",
+      "css": ".ds-lang{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';display:inline-flex;overflow:hidden;border:1px solid color-mix(in srgb,var(--ink-blue,#1f3a5f) 50%,transparent);border-radius:3px;font-size:12px;font-weight:600;letter-spacing:.04em}.ds-lang span{padding:4px 8px;color:var(--muted-foreground,#45586a)}.ds-lang .ds-on{background:var(--primary,#1f3a5f);color:var(--primary-foreground,#fff)}"
+    },
+    {
+      "name": "Document Tabs and Sheet",
+      "kind": "card",
+      "refersTo": "document-sheet",
+      "description": "The active tab joins the warm paper sheet that renders the document as sent.",
+      "html": "<div class=\"ds-doc\"><div class=\"ds-tabs\" role=\"tablist\"><button role=\"tab\" aria-selected=\"true\">CV <mark class=\"ds-count\">2</mark></button><button role=\"tab\" aria-selected=\"false\">Cover letter</button><button role=\"tab\" aria-selected=\"false\">Report</button></div><article class=\"ds-sheet\"><h1>Jane Doe</h1><p class=\"ds-sub\">Senior Backend Engineer · Lisbon</p><h2>Summary</h2><p>Backend engineer with 8 years of PHP. Handled <mark class=\"ds-todo\">[TODO: transactions per day]</mark> payments.</p></article></div>",
+      "css": ".ds-doc{font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-feature-settings: 'cv11','ss03';max-width:560px}.ds-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border,#c2cfca)}.ds-tabs button{margin-bottom:-1px;padding:8px 14px;border:1px solid transparent;border-bottom:0;border-radius:3px 3px 0 0;background:none;color:var(--muted-foreground,#45586a);font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:color .15s}.ds-tabs button:hover{color:var(--foreground,#14202e)}.ds-tabs button[aria-selected=true]{border-color:var(--border,#c2cfca);background:var(--sheet,#fdfcf9);color:var(--sheet-foreground,#111827);font-weight:600;box-shadow:0 1px 0 var(--sheet,#fdfcf9)}.ds-tabs button:focus-visible{outline:2px solid var(--ring,#1f3a5f);outline-offset:-2px}.ds-count{margin-left:4px;padding:0 6px;border-radius:9999px;background:var(--todo,#f6e7c8);color:var(--todo-foreground,#6b4300);font-size:12px;font-weight:700}.ds-sheet{padding:40px 48px;border-radius:0 0 2px 2px;background:var(--sheet,#fdfcf9);color:var(--sheet-foreground,#111827);font-size:14px;line-height:1.6;box-shadow:0 1px 0 var(--border,#c2cfca),0 14px 30px -16px rgb(20 32 46/.32)}.ds-sheet h1{margin:0 0 6px;font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.15}.ds-sub{margin:0 0 16px;color:var(--sheet-muted,#5f6774);font-size:13px}.ds-sheet h2{margin:20px 0 8px;padding-bottom:3px;border-bottom:1px solid var(--sheet-accent,#1f3a5f);color:var(--sheet-accent,#1f3a5f);font-size:14px;font-weight:700;letter-spacing:.02em}.ds-todo{border-radius:2px;background:var(--todo,#f6e7c8);box-shadow:0 0 0 2px var(--todo,#f6e7c8);color:var(--todo-foreground,#6b4300);font-weight:600}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Papers",
+    "overview": "**Creative North Star: \"The Working Papers\"**\n\nContrataEu is a ledger of applications kept the way a Brazilian worker keeps their passport and carteira de trabalho: each job is an entry, dated, inked with a stamp, marked with its language. The chrome borrows the passport's materials (an ink-blue cover band with fine guilloché security hairlines, grounds tinted from the pale green-grey visa page, small tracked field labels, 1px rules), while the document being sent sits on a warm white paper sheet, the largest and lightest thing on the page. The sheet always shows the document as it will be sent; editing swaps the Markdown source in place on the same sheet.\n\nDensity is that of an operational tool used weekly beside job boards: compact Inter, tabular figures for dates and counts, three ink values in chrome, and almost no decoration beyond the band's hairlines and the stamp. The night theme is the passport at night: a deep navy ground with lifted inks, and the sheet stays paper because it is the thing that leaves the app. The world is a reference, never a costume: no seals, crests, fake security fonts or textures outside the band.",
+    "keyCharacteristics": [
+      "Ink-blue cover band with guilloché hairlines on every page (app, welcome, auth); nowhere else carries pattern.",
+      "Green-grey tinted grounds, never neutral grey.",
+      "The document on a warm paper sheet, joined to the tab that opened it like a sheet pulled from a folder.",
+      "Status as an inked entry stamp in carimbo inks, always readable as text.",
+      "Small uppercase tracked field labels and 1px rules instead of boxed cards.",
+      "Near-square corners (2 to 4px) throughout."
+    ],
+    "rules": [
+      {
+        "name": "The Tinted Ground Rule",
+        "body": "Grounds are tinted from the visa page's green-grey (light) or the cover's navy (dark). Neutral #f5f5f5-style greys do not appear.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Is State Rule",
+        "body": "Stamp inks mean state and nothing else: status stamps, green for done or sent confirmations and \"Ready\", red for errors and destructive actions. Violet appears only as the applied stamp. No ink decorates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paper Stays Paper Rule",
+        "body": "The document sheet is warm white in both themes (dimmed to `night-sheet-paper` at night, never inverted), because it is what gets sent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Field Label Rule",
+        "body": "The tracked uppercase label names a field or a group, the way documents label their fields. It is never a kicker or eyebrow placed above a heading.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Dates, counts, versions and percentages use tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Only Paper Floats Rule",
+        "body": "At rest, only paper (the sheet, the sample, the auth card) and open overlays cast shadows. Cards, rows and buttons are flat.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** top every page with the navy band and keep signed-in content inside the shared 1440px frame and its 16 / 24 / 48px gutters.",
+      "**Do** show the document rendered on the paper sheet; Edit swaps in the source in place.",
+      "**Do** express status as a stamp whose text names the status, in its carimbo ink (violet for applied).",
+      "**Do** use the tracked uppercase field label for fields and groups, and 1px rules to separate them.",
+      "**Do** use tabular figures for dates, counts and versions, and Inter for everything.",
+      "**Do** keep the sheet paper-coloured in the dark theme."
+    ],
+    "donts": [
+      "**Don't** put a kicker or eyebrow label above a heading.",
+      "**Don't** carry status by colour alone; the stamp text is the status.",
+      "**Don't** use neutral greys for grounds; tint from the visa page or the navy cover.",
+      "**Don't** use stamp inks decoratively or put guilloché anywhere but the band.",
+      "**Don't** add passport costume: seals, crests, security fonts or paper textures.",
+      "**Don't** stack shadowed cards; only paper and open overlays float.",
+      "**Don't** restyle the PDF template from here; it is a separate system that the sheet mirrors."
+    ]
+  }
+}

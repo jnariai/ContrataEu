@@ -95,9 +95,13 @@ export default function CvImport({
                                 name="file"
                                 accept=".pdf,application/pdf"
                                 required
-                                className="max-w-full text-sm file:mr-3 file:rounded-md file:border file:bg-background file:px-3 file:py-1.5 file:text-sm"
+                                className="max-w-full text-sm text-muted-foreground file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-primary/70 file:bg-transparent file:px-3 file:text-sm file:font-semibold file:text-primary file:transition-colors hover:file:bg-primary/8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:file:border-ink-blue/70 dark:file:text-ink-blue dark:hover:file:bg-ink-blue/10"
                             />
-                            <Button size="sm" disabled={processing}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={processing}
+                            >
                                 {processing ? (
                                     <Loader2 className="size-4 animate-spin" />
                                 ) : (
@@ -120,7 +124,7 @@ export default function CvImport({
 
             {cvImport?.status.value === 'failed' && (
                 <div
-                    className="flex gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                    className="flex gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
                     role="alert"
                 >
                     <AlertTriangle className="mt-0.5 size-4 shrink-0" />

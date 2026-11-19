@@ -1,11 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import { CheckCircle2, Circle, Plus } from 'lucide-react';
 import ApplicationController from '@/actions/App/Http/Controllers/ApplicationController';
-import Heading from '@/components/heading';
 import StatusBadge from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { useTrans } from '@/hooks/use-trans';
-import { formatDateTime } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { tk } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -61,16 +60,20 @@ export default function Dashboard({
     return (
         <>
             <Head title={t('Dashboard')} />
-            <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-6">
+            <div className="w-full space-y-8 py-8 lg:py-10">
                 {!setup.complete && <SetupChecklist setup={setup} />}
 
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                    <Heading
-                        title={t('Applications')}
-                        description={t(
-                            'Every job you are pursuing, and where it stands.',
-                        )}
-                    />
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.015em]">
+                            {t('Applications')}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {t(
+                                'Every job you are pursuing, and where it stands.',
+                            )}
+                        </p>
+                    </div>
                     <Button asChild>
                         <Link href={ApplicationController.create()}>
                             <Plus className="size-4" />
@@ -109,7 +112,7 @@ export default function Dashboard({
                 {applications.data.length === 0 ? (
                     <EmptyState filtered={filters.status !== null} />
                 ) : (
-                    <ul className="divide-y rounded-xl border">
+                    <ul className="divide-y rounded-md border bg-card">
                         {applications.data.map((application) => (
                             <ApplicationListItem
                                 key={application.id}
@@ -192,9 +195,11 @@ function SetupChecklist({ setup }: { setup: Props['setup'] }) {
     ];
 
     return (
-        <section className="space-y-4 rounded-xl border bg-muted/30 p-4 sm:p-6">
-            <div>
-                <h2 className="font-medium">{t('Finish setting up')}</h2>
+        <section className="space-y-4 rounded-md border bg-card p-5 sm:p-6">
+            <div className="space-y-1">
+                <h2 className="text-lg font-semibold">
+                    {t('Finish setting up')}
+                </h2>
                 <p className="text-sm text-muted-foreground">
                     {t(
                         'Do this once, and every application after that takes about a minute.',
@@ -209,7 +214,7 @@ function SetupChecklist({ setup }: { setup: Props['setup'] }) {
                     >
                         {step.done ? (
                             <CheckCircle2
-                                className="size-5 text-green-600"
+                                className="size-5 text-ink-green"
                                 aria-label={t('Done')}
                             />
                         ) : (
@@ -225,7 +230,7 @@ function SetupChecklist({ setup }: { setup: Props['setup'] }) {
                         ) : (
                             <Link
                                 href={step.href}
-                                className="font-medium underline-offset-4 hover:underline"
+                                className="font-semibold text-primary underline-offset-4 hover:underline dark:text-ink-blue"
                             >
                                 {step.label}
                             </Link>
@@ -254,10 +259,10 @@ function FilterChip({
             preserveScroll
             aria-current={active ? 'page' : undefined}
             className={cn(
-                'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors',
+                'inline-flex items-center gap-2 rounded-[3px] border px-3 py-1.5 text-sm font-medium transition-colors',
                 active
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'hover:bg-muted',
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-input hover:bg-accent',
             )}
         >
             {label}
@@ -273,40 +278,44 @@ function FilterChip({
     );
 }
 
+/** One entry: its stamp first (status and date), then the job, then where and in which language. */
 function ApplicationListItem({ application }: { application: ApplicationRow }) {
     const { t, locale } = useTrans();
-    const meta = [
-        application.location,
-        application.work_mode,
-        application.language.toUpperCase(),
-    ].filter(Boolean);
+    const place = [application.location, application.work_mode]
+        .filter(Boolean)
+        .join(' · ');
 
     return (
         <li>
             <Link
                 href={ApplicationController.show(application.id)}
-                className="flex flex-col gap-2 p-4 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:gap-4"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-4 transition-colors hover:bg-accent/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:grid-cols-[9.5rem_minmax(0,1fr)_auto] sm:px-5"
             >
-                <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">
+                <div className="col-span-2 flex items-center gap-2 sm:col-span-1 sm:flex-col sm:items-start sm:gap-1">
+                    <StatusBadge status={application.status} />
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                        {formatDate(
+                            application.applied_at ?? application.updated_at,
+                            locale.htmlLang,
+                        )}
+                    </span>
+                </div>
+                <div className="min-w-0">
+                    <p className="truncate text-[0.9375rem] font-semibold">
                         {application.role_title}
                     </p>
                     <p className="truncate text-sm text-muted-foreground">
                         {application.company_name}
-                        {meta.length > 0 && ` · ${meta.join(' · ')}`}
+                        {place && ` · ${place}`}
                     </p>
                 </div>
-                <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
-                    <StatusBadge status={application.status} />
-                    <span className="text-xs text-muted-foreground">
-                        {t('Updated :date', {
-                            date: formatDateTime(
-                                application.updated_at,
-                                locale.htmlLang,
-                            ),
-                        })}
-                    </span>
-                </div>
+                <span
+                    className="rounded-[3px] border border-ink-blue/50 px-1.5 py-0.5 text-xs font-semibold tracking-[0.04em] text-ink-blue"
+                    lang={application.language}
+                    title={t('Output language')}
+                >
+                    {application.language === 'pt-BR' ? 'PT-BR' : 'EN'}
+                </span>
             </Link>
         </li>
     );
@@ -316,8 +325,8 @@ function EmptyState({ filtered }: { filtered: boolean }) {
     const { t } = useTrans();
 
     return (
-        <div className="rounded-xl border border-dashed p-8 text-center">
-            <p className="font-medium">
+        <div className="rounded-md border border-dashed border-input p-10 text-center">
+            <p className="font-semibold">
                 {filtered
                     ? t('No applications with this status')
                     : t('No applications yet')}

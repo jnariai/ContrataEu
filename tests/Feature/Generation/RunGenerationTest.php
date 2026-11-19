@@ -145,6 +145,26 @@ it('fails with the provider message the user can act on, saving nothing', functi
         ->and($generation->application->fresh()->current_generation_id)->toBeNull();
 });
 
+it('records why a run failed, so the page can point to the fix', function (): void {
+    Http::fake(['api.anthropic.com/*' => Http::response(['type' => 'error', 'error' => ['type' => 'authentication_error', 'message' => 'invalid x-api-key']], 401)]);
+    $generation = queuedGeneration();
+
+    app(RunGeneration::class)->handle($generation);
+
+    expect($generation->fresh()->error_code)->toBe('ai_provider.invalid_key')
+        ->and($generation->fresh()->failureIsFixedInAiKeys())->toBeTrue();
+});
+
+it('records no cause for an unexpected failure', function (): void {
+    $generation = queuedGeneration(['wants_cover_letter' => true]);
+    Prism::fake([fakeGenerationResponse(generationAnswer())]);
+
+    app(RunGeneration::class)->handle($generation);
+
+    expect($generation->fresh()->error_code)->toBeNull()
+        ->and($generation->fresh()->failureIsFixedInAiKeys())->toBeFalse();
+});
+
 it('fails with a generic message when the answer breaks the output contract', function (array $answer): void {
     $generation = queuedGeneration(['wants_cover_letter' => true]);
     Prism::fake([fakeGenerationResponse($answer)]);

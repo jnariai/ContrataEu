@@ -6,6 +6,13 @@ export function formatDateTime(iso: string, locale: string): string {
     }).format(new Date(iso));
 }
 
+/** A stamp date: "18 Nov 2026" / "18 de nov. de 2026", in the user's timezone. */
+export function formatDate(iso: string, locale: string): string {
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
+        new Date(iso),
+    );
+}
+
 export function formatBytes(bytes: number, locale: string): string {
     const units = ['byte', 'kilobyte', 'megabyte'] as const;
     let value = bytes;
@@ -19,7 +26,7 @@ export function formatBytes(bytes: number, locale: string): string {
     return new Intl.NumberFormat(locale, {
         style: 'unit',
         unit: units[unit],
-        unitDisplay: 'short',
+        unitDisplay: unit === 0 ? 'long' : 'short',
         maximumFractionDigits: unit === 0 ? 0 : 1,
     }).format(value);
 }

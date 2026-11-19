@@ -28,8 +28,9 @@ export default function EditApplication({ application, ...options }: Props) {
                     company: application.company_name,
                 })}
             />
-            <div className="mx-auto w-full max-w-3xl px-4 py-6">
+            <div className="w-full max-w-3xl py-8 lg:py-10">
                 <Heading
+                    variant="page"
                     title={t('Edit application')}
                     description={t(
                         'Changes apply to the next generation. Versions you already generated stay as they are.',

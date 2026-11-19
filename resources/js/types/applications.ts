@@ -57,6 +57,8 @@ export type GeneratedDocument = {
     label: string;
     has_pdf: boolean;
     content: string;
+    /** The CV rendered as the PDF renders it; null for other documents. */
+    html: string | null;
     edited: boolean;
     updated_at: string;
     todos: string[];
@@ -102,6 +104,8 @@ export type GenerationFailure = {
     model: string;
     language: { value: LanguageValue; label: string };
     error: string | null;
+    /** The cause is fixed on the AI keys page (rejected key, no credit, unknown model): retrying would fail the same way. */
+    fix_in_ai_keys: boolean;
     queued_at: string;
     started_at: string | null;
     finished_at: string | null;

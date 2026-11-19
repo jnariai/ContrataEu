@@ -112,7 +112,7 @@ function DocumentEditor({
     const fieldId = `content-${document.type}`;
 
     return (
-        <section className="space-y-4 rounded-xl border p-4 sm:p-6">
+        <section className="space-y-4 rounded-md border p-4 sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-medium">{document.label}</h3>
                 <Badge variant={document.required ? 'default' : 'secondary'}>
@@ -140,7 +140,7 @@ function DocumentEditor({
 
             {imported && (
                 <div
-                    className="flex flex-wrap items-start gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                    className="flex flex-wrap items-start gap-3 rounded-md border border-todo bg-todo/60 p-3 text-sm text-todo-foreground dark:border-todo/40 dark:bg-todo/15 dark:text-todo"
                     role="status"
                 >
                     <p className="min-w-0 flex-1">
@@ -320,7 +320,7 @@ function OriginalFile({
                             name="file"
                             accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                             required
-                            className="max-w-full text-sm file:mr-3 file:rounded-md file:border file:bg-background file:px-3 file:py-1.5 file:text-sm"
+                            className="max-w-full text-sm text-muted-foreground file:mr-3 file:h-8 file:cursor-pointer file:rounded-md file:border file:border-primary/70 file:bg-transparent file:px-3 file:text-sm file:font-semibold file:text-primary file:transition-colors hover:file:bg-primary/8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:file:border-ink-blue/70 dark:file:text-ink-blue dark:hover:file:bg-ink-blue/10"
                         />
                         <Button
                             variant="outline"

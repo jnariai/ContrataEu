@@ -19,8 +19,9 @@ export default function CreateApplication({
     return (
         <>
             <Head title={t('New application')} />
-            <div className="mx-auto w-full max-w-3xl px-4 py-6">
+            <div className="w-full max-w-3xl py-8 lg:py-10">
                 <Heading
+                    variant="page"
                     title={t('New application')}
                     description={t(
                         'Tell us about the job. You can generate your documents right after saving.',

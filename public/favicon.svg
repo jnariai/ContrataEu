@@ -1,4 +1,7 @@
 <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-<style>path { fill: #1F3A5F; } @media (prefers-color-scheme: dark) { path { fill: #E5EDF6; } }</style>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M7 2h12.2L27 9.8V28a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm12.5 1.9v4.6a1 1 0 0 0 1 1h4.6ZM10.5 17.5l3.5 3.5 7.5-7.5 1.8 1.8-9.3 9.3-5.3-5.3Z"/>
+<style>.f { stroke: #1F3A5F; } .i { stroke: #5B3E8F; } @media (prefers-color-scheme: dark) { .f { stroke: #E5EDF6; } .i { stroke: #BBA6EA; } }</style>
+<g transform="rotate(-10 16 16)" fill="none" stroke-linecap="square">
+<rect class="f" x="2.6" y="6.6" width="26.8" height="18.8" rx="2.4" stroke-width="2.8"/>
+<path class="i" d="M11.4 17l3.6 3.6 7.4-7.4" stroke-width="3.2"/>
+</g>
 </svg>

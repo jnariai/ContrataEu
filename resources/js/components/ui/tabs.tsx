@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export type TabItem = { value: string; label: ReactNode };
@@ -22,6 +22,49 @@ export function TabList({
     label: string;
     className?: string;
 }) {
+    const listRef = useRef<HTMLDivElement>(null);
+    // Which edges have more tabs past them, so a narrow strip fades only on the side that scrolls.
+    const [overflow, setOverflow] = useState({ start: false, end: false });
+
+    const measure = () => {
+        const list = listRef.current;
+
+        if (!list) {
+            return;
+        }
+
+        setOverflow({
+            start: list.scrollLeft > 1,
+            end: list.scrollLeft + list.clientWidth < list.scrollWidth - 1,
+        });
+    };
+
+    useEffect(() => {
+        measure();
+        window.addEventListener('resize', measure);
+
+        return () => window.removeEventListener('resize', measure);
+    }, []);
+
+    // Keep the picked tab in view (opened from elsewhere on the page, or by keyboard).
+    useEffect(() => {
+        const list = listRef.current;
+        const tab = document.getElementById(`${id}-tab-${value}`);
+
+        // Horizontal only: scrollIntoView would also move the page.
+        if (list && tab) {
+            const left = tab.offsetLeft - list.offsetLeft;
+
+            if (left < list.scrollLeft) {
+                list.scrollLeft = left - 24;
+            } else if (left + tab.offsetWidth > list.scrollLeft + list.clientWidth) {
+                list.scrollLeft = left + tab.offsetWidth - list.clientWidth + 24;
+            }
+        }
+
+        measure();
+    }, [id, value]);
+
     const move = (event: KeyboardEvent<HTMLDivElement>) => {
         const index = tabs.findIndex((tab) => tab.value === value);
         const next = {
@@ -42,11 +85,16 @@ export function TabList({
 
     return (
         <div
+            ref={listRef}
             role="tablist"
             aria-label={label}
             onKeyDown={move}
+            onScroll={measure}
+            style={{
+                maskImage: `linear-gradient(to right, ${overflow.start ? 'transparent, black 2rem' : 'black, black'}, ${overflow.end ? 'black calc(100% - 2rem), transparent' : 'black'})`,
+            }}
             className={cn(
-                'flex gap-1 overflow-x-auto overflow-y-hidden border-b [scrollbar-width:thin]',
+                'flex gap-0.5 overflow-x-auto overflow-y-hidden border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
                 className,
             )}
         >
@@ -64,9 +112,9 @@ export function TabList({
                         tabIndex={selected ? 0 : -1}
                         onClick={() => onValueChange(tab.value)}
                         className={cn(
-                            '-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                            '-mb-px flex min-h-11 shrink-0 items-center gap-1.5 rounded-t-[3px] border border-b-0 px-3.5 py-2 text-sm sm:min-h-0 font-medium whitespace-nowrap transition-colors outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
                             selected
-                                ? 'border-primary text-foreground'
+                                ? 'border-border bg-sheet font-semibold text-sheet-foreground shadow-[0_1px_0_var(--sheet)]'
                                 : 'border-transparent text-muted-foreground hover:text-foreground',
                         )}
                     >

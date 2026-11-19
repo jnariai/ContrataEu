@@ -1,8 +1,5 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
-import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { index as aiCredentials } from '@/routes/ai-credentials';
@@ -16,41 +13,28 @@ import type { NavItem } from '@/types';
 import { useTrans } from '@/hooks/use-trans';
 import { tk } from '@/lib/i18n';
 
-const sidebarNavItems: NavItem[] = [
+/** Setup is what every application draws on; Account is the login itself. */
+const navGroups: { title: string; items: NavItem[] }[] = [
     {
-        title: tk('Candidate profile'),
-        href: editCandidateProfile(),
-        icon: null,
+        title: tk('Setup'),
+        items: [
+            {
+                title: tk('Candidate profile'),
+                href: editCandidateProfile(),
+                icon: null,
+            },
+            { title: tk('Documents'), href: masterDocuments(), icon: null },
+            { title: tk('AI keys'), href: aiCredentials(), icon: null },
+            { title: tk('Prompts'), href: promptOverrides(), icon: null },
+        ],
     },
     {
-        title: tk('Documents'),
-        href: masterDocuments(),
-        icon: null,
-    },
-    {
-        title: tk('AI keys'),
-        href: aiCredentials(),
-        icon: null,
-    },
-    {
-        title: tk('Prompts'),
-        href: promptOverrides(),
-        icon: null,
-    },
-    {
-        title: tk('Account'),
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: tk('Security'),
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: tk('Appearance'),
-        href: editAppearance(),
-        icon: null,
+        title: tk('Your account'),
+        items: [
+            { title: tk('Account'), href: edit(), icon: null },
+            { title: tk('Security'), href: editSecurity(), icon: null },
+            { title: tk('Appearance'), href: editAppearance(), icon: null },
+        ],
     },
 ];
 
@@ -59,40 +43,63 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="px-4 py-6">
-            <Heading
-                title={t('Settings')}
-                description={t('Manage your profile and account settings')}
-            />
+        <div className="py-8 lg:py-10">
+            <div className="mb-8 space-y-1">
+                <h1 className="text-[1.75rem] leading-tight font-semibold tracking-[-0.015em]">
+                    {t('Settings')}
+                </h1>
+                <p className="text-muted-foreground">
+                    {t(
+                        'What every application draws on: your profile, documents, AI keys and prompts. Plus your account.',
+                    )}
+                </p>
+            </div>
 
-            <div className="flex flex-col lg:flex-row lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
+            <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+                <aside className="w-full lg:w-52 lg:shrink-0">
                     <nav
-                        className="flex flex-col space-y-1 space-x-0"
+                        className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1"
                         aria-label={t('Settings')}
                     >
-                        {sidebarNavItems.map((item, index) => (
-                            <Button
-                                key={`${toUrl(item.href)}-${index}`}
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': isCurrentOrParentUrl(item.href),
-                                })}
-                            >
-                                <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
-                                    {t(item.title)}
-                                </Link>
-                            </Button>
+                        {navGroups.map((group) => (
+                            <div key={group.title} className="space-y-1.5">
+                                <span className="field-label block px-2">
+                                    {t(group.title)}
+                                </span>
+                                <ul className="border-t">
+                                    {group.items.map((item) => {
+                                        const current = isCurrentOrParentUrl(
+                                            item.href,
+                                        );
+
+                                        return (
+                                            <li
+                                                key={toUrl(item.href)}
+                                                className="border-b"
+                                            >
+                                                <Link
+                                                    href={item.href}
+                                                    aria-current={
+                                                        current
+                                                            ? 'page'
+                                                            : undefined
+                                                    }
+                                                    className={cn(
+                                                        'block px-2 py-2.5 text-sm transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+                                                        current &&
+                                                            'bg-card font-semibold text-primary dark:text-ink-blue',
+                                                    )}
+                                                >
+                                                    {t(item.title)}
+                                                </Link>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
                         ))}
                     </nav>
                 </aside>
-
-                <Separator className="my-6 lg:hidden" />
 
                 <div className="min-w-0 flex-1 lg:max-w-3xl">
                     <section className="space-y-12">{children}</section>

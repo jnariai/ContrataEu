@@ -9,13 +9,12 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 1px);
+    --radius-sm: calc(var(--radius) - 2px);
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -45,91 +44,118 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 
-    --color-chart-1: var(--chart-1);
-    --color-chart-2: var(--chart-2);
-    --color-chart-3: var(--chart-3);
-    --color-chart-4: var(--chart-4);
-    --color-chart-5: var(--chart-5);
+    /* Working Papers: the navy band, the document sheet, the stamp inks, placeholders still to fill. */
+    --color-band: var(--band);
+    --color-scrim: rgb(10 29 51 / 0.55);
+    --color-band-foreground: var(--band-foreground);
+    --color-band-muted: var(--band-muted);
+    --color-band-ink: var(--band-ink);
 
-    --color-sidebar: var(--sidebar);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sheet: var(--sheet);
+    --color-sheet-foreground: var(--sheet-foreground);
+    --color-sheet-muted: var(--sheet-muted);
+    --color-sheet-accent: var(--sheet-accent);
+
+    --color-ink-grey: var(--ink-grey);
+    --color-ink-blue: var(--ink-blue);
+    --color-ink-violet: var(--ink-violet);
+    --color-ink-green: var(--ink-green);
+    --color-ink-red: var(--ink-red);
+
+    --color-todo: var(--todo);
+    --color-todo-foreground: var(--todo-foreground);
 }
 
+/*
+ * Light: the visa page by day. Grounds are tinted from the passport's pale green-grey page, never neutral grey;
+ * chrome uses the ink-blue cover colour, which is also the PDF's accent.
+ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+    --background: #e7edea;
+    --foreground: #14202e;
+    --card: #f3f6f4;
+    --card-foreground: #14202e;
+    --popover: #f8faf9;
+    --popover-foreground: #14202e;
+    --primary: #1f3a5f;
+    --primary-foreground: #ffffff;
+    --secondary: #d9e3df;
+    --secondary-foreground: #14202e;
+    --muted: #dce5e1;
+    --muted-foreground: #45586a;
+    --accent: #d5e0db;
+    --accent-foreground: #14202e;
+    --destructive: #b3362c;
+    --destructive-foreground: #b3362c;
+    --border: #c2cfca;
+    --input: #7c908a;
+    --ring: #1f3a5f;
+    --radius: 0.25rem;
+
+    --band: #1f3a5f;
+    --band-foreground: #f1f5f8;
+    --band-muted: #b9c8d6;
+    /* The logo's violet impression where it sits on the band: the applied ink, lifted to read on navy. */
+    --band-ink: #bba6ea;
+
+    --sheet: #fdfcf9;
+    --sheet-foreground: #111827;
+    --sheet-muted: #5f6774;
+    --sheet-accent: #1f3a5f;
+
+    --ink-grey: #4c5e6f;
+    --ink-blue: #1f3a5f;
+    --ink-violet: #5b3e8f;
+    --ink-green: #2f6b4f;
+    --ink-red: #b3362c;
+
+    --todo: #f6e7c8;
+    --todo-foreground: #6b4300;
 }
 
+/*
+ * Dark: the passport at night. A deep navy cover for the ground, lifted inks for stamps; the document sheet stays
+ * paper, slightly dimmed, because it is the thing that gets sent.
+ */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    --background: #0e1722;
+    --foreground: #e3e9ee;
+    --card: #142130;
+    --card-foreground: #e3e9ee;
+    --popover: #182637;
+    --popover-foreground: #e3e9ee;
+    --primary: #3b6296;
+    --primary-foreground: #ffffff;
+    --secondary: #1c2b3c;
+    --secondary-foreground: #e3e9ee;
+    --muted: #1c2b3c;
+    --muted-foreground: #a2b4c4;
+    --accent: #213347;
+    --accent-foreground: #e3e9ee;
+    --destructive: #f08a7e;
+    --destructive-foreground: #f08a7e;
+    --border: #283a4d;
+    --input: #5a6f84;
+    --ring: #9dbce3;
+
+    --band: #17345a;
+    --band-foreground: #e3e9ee;
+    --band-muted: #9db0c4;
+    --band-ink: #bba6ea;
+
+    --sheet: #ebe8e1;
+    --sheet-foreground: #14181f;
+    --sheet-muted: #565d69;
+    --sheet-accent: #1f3a5f;
+
+    --ink-grey: #a2b4c4;
+    --ink-blue: #9dbce3;
+    --ink-violet: #bba6ea;
+    --ink-green: #85c7a5;
+    --ink-red: #f29185;
+
+    --todo: #f0ddb5;
+    --todo-foreground: #5c3a00;
 }
 
 @layer base {
@@ -139,6 +165,25 @@
 
     body {
         @apply bg-background text-foreground;
+        font-feature-settings: 'cv11', 'ss03';
+    }
+
+    ::selection {
+        background: color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+
+    :focus-visible {
+        outline-color: var(--ring);
+    }
+
+    html {
+        scrollbar-color: var(--input) transparent;
+        accent-color: var(--primary);
+        caret-color: var(--primary);
+    }
+
+    a {
+        text-underline-offset: 0.2em;
     }
 
     /* Tailwind v4 dropped the pointer cursor on buttons; everything clickable gets it back here. */
@@ -159,5 +204,128 @@
     button:disabled,
     [aria-disabled='true'] {
         cursor: not-allowed;
+    }
+}
+
+@layer components {
+    /* The passport cover's security print: fine concentric hairlines, only on the navy band. */
+    .guilloche {
+        background-image:
+            repeating-radial-gradient(
+                circle at 82% 180%,
+                transparent 0 11px,
+                color-mix(in srgb, var(--band-foreground) 7%, transparent)
+                    11px 12px
+            ),
+            repeating-radial-gradient(
+                circle at 18% -120%,
+                transparent 0 15px,
+                color-mix(in srgb, var(--band-foreground) 5%, transparent)
+                    15px 16px
+            );
+    }
+
+    /* Small tracked field label, as official documents label their fields. */
+    .field-label {
+        @apply text-[0.6875rem] font-semibold tracking-[0.11em] text-muted-foreground uppercase;
+    }
+
+    /* The document as it is sent: the PDF's typography on the paper sheet. Mirrors resources/views/pdf. */
+    .sheet-document {
+        color: var(--sheet-foreground);
+        font-size: 0.875rem;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    .sheet-document h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.15;
+        margin-bottom: 0.35rem;
+    }
+
+    .sheet-document h1 + p {
+        color: var(--sheet-muted);
+        font-size: 0.8125rem;
+        margin-bottom: 1rem;
+    }
+
+    .sheet-document h2 {
+        border-bottom: 1px solid var(--sheet-accent);
+        color: var(--sheet-accent);
+        font-size: 0.875rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin: 1.25rem 0 0.5rem;
+        padding-bottom: 0.2rem;
+    }
+
+    .sheet-document h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+    }
+
+    .sheet-document h3 + p > em:only-child {
+        color: var(--sheet-muted);
+        font-size: 0.8125rem;
+    }
+
+    .sheet-document p {
+        margin-bottom: 0.5rem;
+        max-width: 75ch;
+    }
+
+    .sheet-document ul {
+        list-style: disc;
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.25rem;
+    }
+
+    .sheet-document li + li {
+        margin-top: 0.15rem;
+    }
+
+    .sheet-document a {
+        color: var(--sheet-accent);
+        text-decoration: underline;
+    }
+
+    .sheet-document mark,
+    mark.todo {
+        background: var(--todo);
+        border-radius: 2px;
+        box-shadow: 0 0 0 2px var(--todo);
+        color: var(--todo-foreground);
+        font-weight: 600;
+    }
+
+    /* The entry stamp is pressed once when the status changes. */
+    @keyframes stamp-press {
+        0% {
+            opacity: 0;
+            transform: rotate(-1.5deg) scale(1.18);
+        }
+
+        60% {
+            opacity: 1;
+            transform: rotate(-1.5deg) scale(0.97);
+        }
+
+        100% {
+            transform: rotate(-1.5deg) scale(1);
+        }
+    }
+
+    .stamp-pressed {
+        animation: stamp-press 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .stamp-pressed {
+            animation: none;
+        }
     }
 }

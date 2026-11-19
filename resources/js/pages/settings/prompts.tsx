@@ -77,7 +77,7 @@ function PromptEditor({
     const customized = prompt.override !== null;
 
     return (
-        <section className="space-y-3 rounded-xl border p-4 sm:p-6">
+        <section className="space-y-3 rounded-md border p-4 sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
                 <Label htmlFor={fieldId} className="text-base font-medium">
                     {prompt.label}

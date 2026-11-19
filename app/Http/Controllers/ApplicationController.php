@@ -82,6 +82,8 @@ class ApplicationController extends Controller
                 'model' => $generation->model,
                 'language' => ['value' => $generation->language->value, 'label' => $generation->language->label()],
                 'error' => $generation->error,
+                // Generating again with the same key would fail the same way: the page sends the user to their keys.
+                'fix_in_ai_keys' => $generation->failureIsFixedInAiKeys(),
                 'queued_at' => $generation->created_at->toIso8601ZuluString(),
                 'started_at' => $generation->started_at?->toIso8601ZuluString(),
                 'finished_at' => $generation->finished_at?->toIso8601ZuluString(),

@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $input_tokens
  * @property int|null $output_tokens
  * @property string|null $error
+ * @property string|null $error_code
  * @property CarbonImmutable|null $started_at
  * @property CarbonImmutable|null $finished_at
  * @property CarbonImmutable $created_at
@@ -48,7 +49,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[Fillable([
     'version', 'status', 'provider', 'model', 'language', 'report',
-    'input_tokens', 'output_tokens', 'error', 'started_at', 'finished_at',
+    'input_tokens', 'output_tokens', 'error', 'error_code', 'started_at', 'finished_at',
 ])]
 class Generation extends Model
 {
@@ -107,12 +108,16 @@ class Generation extends Model
             'input_tokens' => $inputTokens,
             'output_tokens' => $outputTokens,
             'error' => null,
+            'error_code' => null,
             'finished_at' => $at,
         ]);
     }
 
-    /** `$error` is shown to the user: it must already be safe (no keys, no raw provider payloads). */
-    public function fail(string $error, CarbonImmutable $at): void
+    /**
+     * `$error` is shown to the user: it must already be safe (no keys, no raw provider payloads). `$errorCode` is the
+     * business exception's stable code when the cause is known, so the page can point to the fix.
+     */
+    public function fail(string $error, CarbonImmutable $at, ?string $errorCode = null): void
     {
         if ($this->status->isFinished()) {
             return;
@@ -121,8 +126,24 @@ class Generation extends Model
         $this->update([
             'status' => GenerationStatus::Failed,
             'error' => $error,
+            'error_code' => $errorCode,
             'finished_at' => $at,
         ]);
+    }
+
+    /**
+     * The run failed for a reason the user fixes on their AI keys (a rejected or deleted key, no credit, a model the
+     * provider doesn't know, a private address), so generating again with the same key would fail the same way.
+     */
+    public function failureIsFixedInAiKeys(): bool
+    {
+        return in_array($this->error_code, [
+            'ai_provider.invalid_key',
+            'ai_provider.out_of_credit',
+            'ai_provider.invalid_request',
+            'ai_provider.base_url_not_public',
+            'generation.key_removed',
+        ], true);
     }
 
     public function isFinished(): bool

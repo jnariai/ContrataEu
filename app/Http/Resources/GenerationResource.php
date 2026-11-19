@@ -9,6 +9,7 @@ use App\Models\Generation;
 use App\ValueObjects\CvMarkdown;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 /**
  * One generation for the show page. Callers eager-load `documents` and `answers.screeningQuestion`.
@@ -41,6 +42,10 @@ class GenerationResource extends JsonResource
                     'type' => $document->type->value,
                     'label' => $document->type->label(),
                     'content' => $document->content,
+                    // The CV as the PDF renders it (same CommonMark, raw HTML stripped, unsafe links dropped), for the page's document sheet.
+                    'html' => $document->type === DocumentType::Cv
+                        ? Str::markdown($document->content, ['html_input' => 'strip', 'allow_unsafe_links' => false])
+                        : null,
                     'has_pdf' => $document->type->hasPdf(),
                     'edited' => $document->isEdited(),
                     'updated_at' => $document->updated_at->toIso8601ZuluString(),
